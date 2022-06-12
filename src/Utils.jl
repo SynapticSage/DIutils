@@ -11,8 +11,7 @@ module utils
     using Infiltrator
     using ThreadsX
 
-    include("utils/SearchSortedNearest.jl/src/SearchSortedNearest.jl")
-    import .SearchSortedNearest
+    import SearchSortedNearest
     searchsortednearest = SearchSortedNearest.searchsortednearest
     searchsortednext    = SearchSortedNearest.searchsortednext
 
@@ -157,7 +156,7 @@ module utils
         replace(Z .!= nothing, missing=>false)
     end
 
-    include("utils/dict.jl")
-    include("utils/namedtup.jl")
+    include("dict.jl")
+    include("namedtup.jl")
 
 end
