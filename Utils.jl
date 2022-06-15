@@ -1,4 +1,10 @@
-module utils
+module Utils
+
+
+    using DrWatson
+    using ProgressMeter
+    using Infiltrator
+    using Reexport
 
     import Random
     using CSV, DataFrames
@@ -6,9 +12,7 @@ module utils
     using Colors, ColorSchemes
     using Pushover
     using Statistics, NaNStatistics
-    using Plots, DrWatson
-    using ProgressMeter
-    using Infiltrator
+    using Plots
     using ThreadsX
 
     import SearchSortedNearest
@@ -156,7 +160,7 @@ module utils
         replace(Z .!= nothing, missing=>false)
     end
 
-    include("dict.jl")
-    include("namedtup.jl")
+    @reexport using dict
+    @reexport using namedtup
 
 end
