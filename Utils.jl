@@ -160,7 +160,9 @@ module Utils
         replace(Z .!= nothing, missing=>false)
     end
 
+    push!(LOAD_PATH, srcdir("Utils", "src"))
     @reexport using dict
     @reexport using namedtup
+    pop!(LOAD_PATH)
 
 end
