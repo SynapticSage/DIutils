@@ -1,6 +1,7 @@
 module dict
+
     export remove_key_item
-    export filter_keys
+    export lambda_keys
     function remove_key_item(k::Dict, item)
         if item ∈ keys(k)
             pop!(k, item)
@@ -11,7 +12,7 @@ module dict
     """
     filters a dict by its keys
     """
-    function filter_keys(d::Dict, lambda::Function)
+    function lambda_keys(d::Dict, lambda::Function; nested::Bool=true)
         d = copy(d)
         lambda_keys!(d, lambda)
     end
@@ -19,11 +20,15 @@ module dict
     """
     filters a dict by its keys, with modification
     """
-    function filter_keys!(d::Dict, lambda::Function)
+    function lambda_keys!(d::Dict, lambda::Function; nested::Bool=true)
         for key ∈ keys(d)
             v = pop!(d, key)
             key = lambda(key)
-            d[key] = v
+            if nested && typeof(v) <: Union{Dict,NamedTuple}
+                d[key] = filter_keys(v, lambda; nested)
+            else
+                d[key] = v
+            end
         end
         return d
     end

@@ -5,9 +5,12 @@ module namedtup
     keys.
     =#
 
+    using Reexport
     export namedtupkeys_to_df, namedtuple_to_dict, remove_key_item
     export bestpartialmatch, countmatch
     export applyvalues
+    export lambda_keys
+    @reexport using NamedTupleTools
 
     function namedtuple_to_dict(X::NamedTuple)
         Dict(zip(keys(X), values(X)))
@@ -111,12 +114,25 @@ module namedtup
     # |    |,---.|    .   .,---.,---.    ,---.|__.     ,---.    ,---|.,---.|--- 
     #  \  / ,---||    |   ||---'`---.    |   ||        ,---|    |   |||    |    
     #   `'  `---^`---'`---'`---'`---'    `---'`        `---^    `---'``---'`---'
-    function applyvalues(D::T where T <: AbstractDict{<:Any,<:AbstractDict},
+    function lambda_values(D::T where T <: AbstractDict{<:Any,<:AbstractDict},
             lambda::T where T <: Function) 
-        Dict(key=>applyvalues(value, lambda) for (key,value) in D)
+        Dict(key=>lambda_values(value, lambda) for (key,value) in D)
     end
-    function applyvalues(D::T where T <: AbstractDict{<:Any,<:NamedTuple},
+    function lambda_values(D::T where T <: AbstractDict{<:Any,<:NamedTuple},
             lambda::T where T <: Function) 
         Dict(key=>lambda(value) for (key,value) in D)
     end
+    #applyvalues = lambda_values
+
+
+    """
+    filters a dict by its keys, with modification
+    """
+    function lambda_keys(d::NamedTuple, lambda::Function; nested::Bool=false)
+        d = Dict(zip(d))
+        filter_keys(d, lambda; nested)
+        d = NamedTuple(d)
+        return d
+    end
+
 end
