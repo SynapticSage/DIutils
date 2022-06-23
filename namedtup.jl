@@ -114,6 +114,10 @@ module namedtup
     # |    |,---.|    .   .,---.,---.    ,---.|__.     ,---.    ,---|.,---.|--- 
     #  \  / ,---||    |   ||---'`---.    |   ||        ,---|    |   |||    |    
     #   `'  `---^`---'`---'`---'`---'    `---'`        `---^    `---'``---'`---'
+    function lambda_values(D::T where T <: AbstractDict{<:NamedTuple,<:Any},
+            lambda::T where T <: Function) 
+        Dict(key=>lambda_values(value, lambda) for (key,value) in D)
+    end
     function lambda_values(D::T where T <: AbstractDict{<:Any,<:AbstractDict},
             lambda::T where T <: Function) 
         Dict(key=>lambda_values(value, lambda) for (key,value) in D)
