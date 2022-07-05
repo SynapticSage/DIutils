@@ -2,6 +2,8 @@ module dict
 
     export remove_key_item
     export lambda_keys
+    export to_dict
+
     function remove_key_item(k::Dict, item)
         if item ∈ keys(k)
             pop!(k, item)
@@ -31,6 +33,9 @@ module dict
             end
         end
         return d
+    end
+
+    function to_dict()
     end
 
 
