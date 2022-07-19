@@ -38,5 +38,26 @@ module dict
     function to_dict()
     end
 
+    """
+    filterchange_keys
+
+    filter a dict by its keys and change those filter hits with a changee function
+    """
+    function filterchange_keys!(D::AbstractDict, filter::Function, change::Union{Function,Nothing}=identity)
+        for k in keys(D)
+            if filter(k)
+                v = pop!(D, k)
+                if change !== nothing
+                    D[change(k)] = v
+                end
+            end
+        end
+        D
+    end
+    function filterchange_keys(D::AbstractDict, filter::Function, change::Union{Function,Nothing}=nothing)
+        D = copy(D)
+        filterchange_keys!(D, filter, change)
+    end
+
 
 end
