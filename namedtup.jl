@@ -6,19 +6,52 @@ module namedtup
     =#
 
     using Reexport
+    using DataFrames
+    using DataStructures: OrderedDict
+
     export namedtupkeys_to_df, namedtuple_to_dict, remove_key_item
-    export bestpartialmatch, countmatch
-    export applyvalues
-    export lambda_keys
+    export bestpartialmatch, argbestpartialmatch, countmatch
+    export applyvalues, lambda_key, removeprops, reorderprops
     @reexport using NamedTupleTools
+
+    removeprops(keyset::Base.KeySet, key::Vector{Symbol}) =
+                                            removeprops(collect(keyset), key)
+    function removeprops(keyset::Vector{NamedTuple}, key::Vector{Symbol})
+        for i in 1:length(keyset)
+            keyset[i] = pop(keyset[i], key)
+        end
+        keyset
+    end
+    function reorderprops(keyset::Vector{NamedTuple}, 
+                          pref_order::Vector{Symbol})
+        for i in 1:length(keyset)
+            keyset[i] = reorderprops(keyset[i], pref_order)
+        end
+        keyset
+    end
+    function reorderprops(X::NamedTuple, keys::Vector{Symbol})
+        pn     = propertynames(X)
+        keys   = intersect(keys, pn)
+        unspec = setdiff(pn, keys)
+        out = merge(OrderedDict(k=>getproperty(X, k) for k in keys),
+                    OrderedDict(u=>getproperty(X, u) for u in unspec))
+        NamedTuple(out)
+    end
+    function pop(X::NamedTuple, key::Symbol)
+        X = namedtuple_to_dict(X)
+        key ∈ keys(X) ? pop!(X, key) : nothing
+        NamedTuple(X)
+    end
+    function pop(X::NamedTuple, keyz::Vector{Symbol})
+        X = namedtuple_to_dict(X)
+        for key in keyz
+            key ∈ keys(X) ? pop!(X, key) : nothing
+        end
+        NamedTuple(X)
+    end
 
     function namedtuple_to_dict(X::NamedTuple)
         Dict(zip(keys(X), values(X)))
-    end
-    function pop(X::NamedTuple, key)
-        X = namedtuple_to_dict(X)
-        pop!(X, key)
-        NamedTuple(X)
     end
     function namedtupkeys_to_df(K::Base.KeySet)
         df = DataFrame()
@@ -74,9 +107,17 @@ module namedtup
     """
     finds the key that is the best partial match to a search term
     """
-    function bestpartialmatch(K::Vector{<:NamedTuple},
-                              search::NamedTuple)
-        argmax(countmatch(K, search); kws...)
+    function argbestpartialmatch(K::Base.KeySet, search::NamedTuple)
+        bestpartialmatch(collect(K), search)
+    end
+    function argbestpartialmatch(K::Vector{<:NamedTuple}, search::NamedTuple)
+        argmax(countmatch(K, search))
+    end
+    function bestpartialmatch(K::Base.KeySet, search::NamedTuple)
+        bestpartialmatch(collect(K), search)
+    end
+    function bestpartialmatch(K::Vector{<:NamedTuple}, search::NamedTuple)
+        K[argmax(countmatch(K, search))]
     end
 
     #                                                                
@@ -126,13 +167,13 @@ module namedtup
             lambda::T where T <: Function) 
         Dict(key=>lambda(value) for (key,value) in D)
     end
-    #applyvalues = lambda_values
+    applyvalues = lambda_values
 
 
     """
-    filters a dict by its keys, with modification
+    return a namedtuple changed
     """
-    function lambda_keys(d::NamedTuple, lambda::Function; nested::Bool=false)
+    function lambda_key(d::NamedTuple, lambda::Function; nested::Bool=false)
         d = Dict(zip(d))
         filter_keys(d, lambda; nested)
         d = NamedTuple(d)
