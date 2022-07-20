@@ -14,13 +14,17 @@ module namedtup
     export applyvalues, lambda_key, removeprops, reorderprops
     @reexport using NamedTupleTools
 
-    removeprops(keyset::Base.KeySet, key::Vector{Symbol}) =
-                                            removeprops(collect(keyset), key)
+    removeprops(keyset::T where T<:Base.KeySet, key::Vector{Symbol}) =
+        removeprops(Vector{NamedTuple}(collect(keyset)), key)
     function removeprops(keyset::Vector{NamedTuple}, key::Vector{Symbol})
         for i in 1:length(keyset)
             keyset[i] = pop(keyset[i], key)
         end
         keyset
+    end
+    function reorderprops(keyset::T where T<:Base.KeySet, 
+                          pref_order::Vector{Symbol})
+        reorderprops(Vector{NamedTuple}(collect(keyset)), pref_order)
     end
     function reorderprops(keyset::Vector{NamedTuple}, 
                           pref_order::Vector{Symbol})

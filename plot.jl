@@ -5,9 +5,10 @@ module plot
     using Dates
 
 
-    function set_theme_timebased()
-        if Utils.in_range(hour(now()), [0,5]) ||
-           Utils.in_range(hour(now()), [20, 24])
+    function set_theme_timebased(time::Union{Real,Nothing}=nothing)
+        time = time === nothing ? hour(now()) : time
+        if Utils.in_range(time, [0,5]) ||
+           Utils.in_range(time, [20, 24])
             Plots.theme(:dark)
             theme="dark"
         else
@@ -15,4 +16,5 @@ module plot
             theme="bright"
         end
     end
+    set_theme_timebased() = set_theme_timebased(nothing)
 end
