@@ -8,6 +8,7 @@ module namedtup
     using Reexport
     using DataFrames
     using DataStructures: OrderedDict
+    using Infiltrator
 
     export namedtupkeys_to_df, namedtuple_to_dict, remove_key_item
     export bestpartialmatch, argbestpartialmatch, countmatch
@@ -122,6 +123,13 @@ module namedtup
     end
     function bestpartialmatch(K::Vector{<:NamedTuple}, search::NamedTuple)
         K[argmax(countmatch(K, search))]
+    end
+
+    function orderlessmatch(query::NamedTuple, ideal::NamedTuple)
+        countmatch([ideal], query)[1] == length(propertynames(ideal))
+    end
+    function orderlessmatch(query::NamedTuple, ideals::Union{Vector{<:NamedTuple}, Base.KeySet})
+        any(orderlessmatch(query,ideal) for ideal in ideals)
     end
 
     #                                                                
