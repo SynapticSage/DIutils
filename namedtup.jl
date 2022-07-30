@@ -58,6 +58,7 @@ module namedtup
     function namedtuple_to_dict(X::NamedTuple)
         Dict(zip(keys(X), values(X)))
     end
+
     function namedtupkeys_to_df(K::Base.KeySet)
         df = DataFrame()
         for k in K
@@ -121,9 +122,15 @@ module namedtup
     function bestpartialmatch(K::Base.KeySet, search::NamedTuple)
         bestpartialmatch(collect(K), search)
     end
-    function bestpartialmatch(K::Vector{<:NamedTuple}, search::NamedTuple)
+    function bestpartialmatch(K::Vector{<:Any}, search::NamedTuple)
+        if eltype(K) != NamedTuple
+            K = Vector{NamedTuple}(K)
+        end
         K[argmax(countmatch(K, search))]
     end
+    #function bestpartialmatch(K::Vector{Any}, search::NamedTuple)
+    #    K[argmax(countmatch(K, search))]
+    #end
 
     function orderlessmatch(query::NamedTuple, ideal::NamedTuple)
         countmatch([ideal], query)[1] == length(propertynames(ideal))
