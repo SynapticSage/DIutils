@@ -3,6 +3,25 @@ module dict
     export remove_key_item
     export lambda_keys
     export to_dict
+    using Infiltrator
+
+
+    function flatten!(X::AbstractDict;keyfilt=x->true,valfilt=x->true)
+        while any(typeof.(values(X)) .<: AbstractDict)
+            for (K,V) in X
+                if typeof(V) <: AbstractDict
+                    v = Dict(k=>v for (k,v) in pop!(X, K)
+                             if keyfilt(k) && valfilt(v))
+                    try
+                        merge!(X,v)
+                    catch
+                    end
+                end
+            end
+        end
+        X
+    end
+    flatten(X::AbstractDict; kws...) = flatten!(copy(X); kws...)
 
     function remove_key_item(k::Dict, item)
         if item ∈ keys(k)
