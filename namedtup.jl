@@ -119,14 +119,28 @@ module namedtup
     function argbestpartialmatch(K::Vector{<:NamedTuple}, search::NamedTuple)
         argmax(countmatch(K, search))
     end
-    function bestpartialmatch(K::Base.KeySet, search::NamedTuple)
-        bestpartialmatch(collect(K), search)
+    function bestpartialmatch(K::Base.KeySet, search::NamedTuple; kws...)
+        bestpartialmatch(collect(K), search; kws...)
     end
-    function bestpartialmatch(K::Vector{<:Any}, search::NamedTuple)
+    function bestpartialmatch(K::Vector{<:Any}, search::NamedTuple; 
+            nothing_means_removekey::Bool=false)
         if eltype(K) != NamedTuple
             K = Vector{NamedTuple}(K)
         end
+        if nothing_means_removekey
+            @info "keys before" length(K)
+            K = removenothings(K, search)
+            @info "keys after" length(K)
+        end
         K[argmax(countmatch(K, search))]
+    end
+    function removenothings(NTs::Union{Base.KeySet, Vector{<:Any}}, 
+                            search::NamedTuple)
+        nothings = collect(values(search) .=== nothing)
+        select_key_absence = collect(keys(search))[nothings]
+        [nt for nt in NTs if 
+         all((!).(in.(select_key_absence, [propertynames(nt)])))
+        ]
     end
     #function bestpartialmatch(K::Vector{Any}, search::NamedTuple)
     #    K[argmax(countmatch(K, search))]
