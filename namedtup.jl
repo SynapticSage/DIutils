@@ -134,6 +134,12 @@ module namedtup
         end
         K[argmax(countmatch(K, search))]
     end
+
+    """
+        removenothings
+
+    removes keys with a search field equal to nothing
+    """
     function removenothings(NTs::Union{Base.KeySet, Vector{<:Any}}, 
                             search::NamedTuple)
         nothings = collect(values(search) .=== nothing)
