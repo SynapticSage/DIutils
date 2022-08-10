@@ -128,9 +128,9 @@ module namedtup
             K = Vector{NamedTuple}(K)
         end
         if nothing_means_removekey
-            @info "keys before" length(K)
+            #@info "keys before" length(K)
             K = removenothings(K, search)
-            @info "keys after" length(K)
+            #@info "keys after" length(K)
         end
         K[argmax(countmatch(K, search))]
     end
