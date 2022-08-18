@@ -215,13 +215,17 @@ module filtreg
                 @assert !(filt_for_cols isa Vector{Bool})
                 @assert !(cols isa Vector{Bool})
                 list_cols = cols isa Vector ? String.(cols) : String.([cols])
+                column_count_equal = (count(col->col∈names(data[i]), cols)!=length(cols))
+
                 if filter_skipmissingcols && 
-                    any(c ∉ names(data[i]) for c ∈ list_cols)
+                    (any(c ∉ names(data[i]) for c ∈ list_cols) ||
+                     column_count_equal)
                     @debug "data[$i] missing col ∈ cols=$cols, skip filter"
                     continue
                 end
                 if filt_for_cols isa Function
                     #println("Filter is a function")
+                    @assert count(col->col∈names(data[i]), cols)==length(cols) "Uh oh, missing col, consider filter_skipmissingcols=true"
                     inds = @inbounds filt_for_cols(data[i][!, cols])
                 elseif typeof(filt_for_cols) <: Vector
                     #println("Filter is a set of functions")
@@ -233,6 +237,7 @@ module filtreg
                     @debug "filt_for_cols = $filt_for_cols"
                     throw(TypeError(:filt_for_cols, "",Vector,typeof(filt_for_cols)))
                 end
+                @assert !(inds isa Vector{Missing})
                 replace!(inds, missing=>false)
                 inds = disallowmissing(inds)
                 @debug begin
@@ -258,7 +263,6 @@ module filtreg
             filters::Union{Nothing,AbstractDict}=nothing, transfer=nothing,
             on="time", filter_skipmissingcols::Bool=false
             )::Vector{DataFrame}
-        @infiltrate
         if filters !== nothing
             required_cols  = get_filter_req(filters)
             missing_fields = setdiff(required_cols, names(target))
@@ -278,7 +282,8 @@ module filtreg
         end
         @debug "filter"
         if filters !== nothing
-            source, target = utils.filter(source, target; filters=filters, filter_skipmissingcols)
+        @info filter_skipmissingcols
+            source, target = Utils.filtreg.filter(source, target; filters=filters, filter_skipmissingcols)
         end
         return [source, target]
     end
