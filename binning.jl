@@ -2,6 +2,7 @@ module binning
     
     export inside, get_samptime
     using Statistics
+    import ..Utils
 
     # Radius measurements
     function vector_dist(vals::Array, center::Array)::Vector{Float32}
@@ -36,6 +37,10 @@ module binning
         grid = collect(grid)
         grid = dropdims(mean([vec(grid[1:end-1]) vec(grid[2:end])], dims=2), dims=2)
     end
+
+    digitize(X::AbstractArray, nbins) = 
+        Int16.(floor.(Utils.norm_extrema(X, [0, nbins-1])) .+ 1)
+    
 
 
 end
