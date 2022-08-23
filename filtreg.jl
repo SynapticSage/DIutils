@@ -210,22 +210,26 @@ module filtreg
         @debug "→ → → → → → → → → → → → "
         @inbounds for (cols, filt_for_cols) ∈ filters
             for i ∈ 1:length(data)
-                @assert !(cols isa Bool)
-                @assert !(filt_for_cols isa Bool)
-                @assert !(filt_for_cols isa Vector{Bool})
-                @assert !(cols isa Vector{Bool})
+
+                @assert !(cols isa Bool) &&
+                !(filt_for_cols isa Bool) &&
+                !(filt_for_cols isa Vector{Bool}) &&
+                !(cols isa Vector{Bool})
+
                 list_cols = cols isa Vector ? String.(cols) : String.([cols])
-                column_count_equal = (count(col->col∈names(data[i]), cols)!=length(cols))
+
+                column_count = count(col->col∈names(data[i]), list_cols) 
+                column_count_not_equal = column_count != length(list_cols)
 
                 if filter_skipmissingcols && 
-                    (any(c ∉ names(data[i]) for c ∈ list_cols) ||
-                     column_count_equal)
+                    (any(c ∉ names(data[i]) for c ∈ list_cols) || column_count_not_equal)
                     @debug "data[$i] missing col ∈ cols=$cols, skip filter"
                     continue
                 end
+
                 if filt_for_cols isa Function
                     #println("Filter is a function")
-                    @assert count(col->col∈names(data[i]), cols)==length(cols) "Uh oh, missing col, consider filter_skipmissingcols=true"
+                    @assert column_count == length(list_cols) "Uh oh, missing col, consider filter_skipmissingcols=true"
                     inds = @inbounds filt_for_cols(data[i][!, cols])
                 elseif typeof(filt_for_cols) <: Vector
                     #println("Filter is a set of functions")
@@ -237,9 +241,14 @@ module filtreg
                     @debug "filt_for_cols = $filt_for_cols"
                     throw(TypeError(:filt_for_cols, "",Vector,typeof(filt_for_cols)))
                 end
-                @assert !(inds isa Vector{Missing})
-                replace!(inds, missing=>false)
-                inds = disallowmissing(inds)
+
+                @assert inds isa Vector || inds isa BitVector &&
+                        !(inds isa Vector{Missing})
+
+                if eltype(inds) <: Missing
+                    replace!(inds, missing=>false)
+                    disallowmissing!(inds)
+                end
                 @debug begin
                     percent = mean(inds)*100
                     "data_$i filtration: $percent percent pass filter on $cols"
