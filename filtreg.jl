@@ -76,11 +76,16 @@ module filtreg
         match_on_source = source[:, on]
         match_on_target = target[:, on]
 
-        match_on_target = typeof(match_on_target) == convert_type ?
-                          match_on_target : convert(Vector{convert_type},
+        if any(ismissing.(match_on_target))
+            ct = Union{convert_type, Missing}
+        else
+            ct = convert_type
+        end
+        match_on_target = typeof(match_on_target) == ct ?
+                          match_on_target : convert(Vector{ct},
                                                     match_on_target)
-        match_on_source = typeof(match_on_target) == convert_type ?
-                          match_on_source : convert(Vector{convert_type},
+        match_on_source = typeof(match_on_target) == ct ?
+                          match_on_source : convert(Vector{ct},
                                                     match_on_source)
 
         # FindNearest
@@ -96,7 +101,8 @@ module filtreg
         else
             out_of_tolerance = zeros(Bool, size(target,1))
         end
-        any_out_of_tol = any(out_of_tolerance)
+        nonmissing = (!).(ismissing.(out_of_tolerance))
+        any_out_of_tol = any(out_of_tolerance[nonmissing])
 
         if tolerance_violation === nothing
             target = @inbounds target[Not(out_of_tolerance), :]
@@ -245,15 +251,19 @@ module filtreg
                 @assert inds isa Vector || inds isa BitVector &&
                         !(inds isa Vector{Missing})
 
-                if eltype(inds) <: Missing
+                if Missing <: eltype(inds)
                     replace!(inds, missing=>false)
-                    disallowmissing!(inds)
+                    inds = disallowmissing(inds)
                 end
                 @debug begin
                     percent = mean(inds)*100
                     "data_$i filtration: $percent percent pass filter on $cols"
                 end
-                @inbounds data[i] = data[i][inds, :];
+                try
+                    @inbounds data[i] = data[i][inds, :];
+                catch
+                    @infiltrate
+                end
             end
         end
         for i in 1:length(data)
