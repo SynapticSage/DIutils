@@ -1,9 +1,6 @@
-"""
-    stat
+module statistic
 
-statistics helper funcs
-"""
-module stat
+    export  pfunc
 
     function pfunc(x::Real)
         if x < 1e-3
