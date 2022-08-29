@@ -8,6 +8,7 @@ module filtreg
     using DataFrames
     import DataFrames: ColumnIndex
     using Infiltrator
+    using ProgressMeter
 
     CItype = Union{ColumnIndex, Vector{<:ColumnIndex}}
 
