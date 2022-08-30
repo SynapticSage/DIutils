@@ -132,7 +132,9 @@ module namedtup
             K = removenothings(K, search)
             #@info "keys after" length(K)
         end
-        K[argmax(countmatch(K, search))]
+        k = K[argmax(countmatch(K, search))]
+        @info "best partial match" k
+        k
     end
 
     """
