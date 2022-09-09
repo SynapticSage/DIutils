@@ -9,7 +9,7 @@ module plot
         time = time === nothing ? hour(now()) : time
         if Utils.in_range(time, [0,5]) ||
            Utils.in_range(time, [20, 24])
-            Plots.theme(:dark)
+            Plots.theme(:brigh)
             theme="dark"
         else
             Plots.theme(:bright)
