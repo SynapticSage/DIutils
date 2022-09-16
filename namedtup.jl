@@ -15,6 +15,19 @@ module namedtup
     export applyvalues, lambda_key, removeprops, reorderprops
     @reexport using NamedTupleTools
 
+
+    function ntopt_string(nt::NamedTuple; linker="=>", delim=",")
+        desc = ["$(k)$(linker)$(v)" for (k, v) in zip(keys(nt), values(nt))]
+        desc = join(desc, delim)
+        replace(desc, "OrderedDict" => "",
+                       "Dict" => "",
+                       "String" => "",
+                       "Float32" => "", "Float64" => "", "{," => "", 
+                       "{"=>"", "}" => "",
+                       ":"=>"-"
+                      )
+    end
+
     removeprops(keyset::T where T<:Base.KeySet, key::Vector{Symbol}) =
         removeprops(Vector{NamedTuple}(collect(keyset)), key)
     function removeprops(keyset::Vector{NamedTuple}, key::Vector{Symbol})
@@ -220,5 +233,8 @@ module namedtup
         d = NamedTuple(d)
         return d
     end
+
+
+
 
 end

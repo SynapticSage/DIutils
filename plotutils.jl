@@ -1,8 +1,11 @@
-module plot
+module plotutils
 
-    import Utils
+    import ..Utils
     import Plots
     using Dates
+    using ColorSchemes
+
+    export  plotcolor
 
 
     function set_theme_timebased(time::Union{Real,Nothing}=nothing)
@@ -17,5 +20,9 @@ module plot
         end
     end
     
+    function plotcolor(propvec::AbstractVector, cmap::Symbol)
+        propvec = Utils.norm_extrema(propvec)
+        get.([colorschemes[cmap]], propvec)
+    end
 
 end
