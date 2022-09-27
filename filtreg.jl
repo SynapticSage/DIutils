@@ -278,6 +278,20 @@ module filtreg
         filterAndRegister
 
     combination of  `raw.filter()` and `raw.register()` steps
+
+    # Inputs
+    filters
+    source::DataFrame 
+    target::DataFrame
+    filters::Union{Nothing,AbstractDict}=nothing
+    transfer=nothing,
+    on="time"
+    filter_skipmissingcols::Bool=false
+
+    # Output
+    source, target
+
+    but these are also modified by reference
     """
     function filterAndRegister(source::DataFrame, target::DataFrame;
             filters::Union{Nothing,AbstractDict}=nothing, transfer=nothing,
