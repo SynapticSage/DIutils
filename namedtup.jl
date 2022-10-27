@@ -150,6 +150,21 @@ module namedtup
         k
     end
 
+    export keymatch
+    """
+        keymatch
+
+    easier shortcut for filter() matching on named tuple key-value
+    pairs
+    """
+    function keymatch(nt, keyvalues...)
+        for i in 1:2:length(keyvalues)
+            k,v = keyvalues[i], keyvalues[i+1]
+            nt = filter(item->getproperty(item,k)==v, nt)
+        end
+        nt
+    end
+
     """
         removenothings
 
