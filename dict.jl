@@ -78,5 +78,12 @@ module dict
         filterchange_keys!(D, filter, change)
     end
 
+    function load_dict_to_module!(mod::Module, dict::Dict)
+        for (k,v) in dict
+            println("Loading $k")
+            Core.eval(mod, :($(Symbol(k)) = $v))
+        end
+    end
+
 
 end
