@@ -20,7 +20,8 @@ module plotutils
         end
     end
     
-    function plotcolor(propvec::AbstractVector, cmap::Symbol)
+    export getplotcolor
+    function getplotcolor(propvec::AbstractVector, cmap::Symbol)
         propvec = Utils.norm_extrema(propvec)
         get.([colorschemes[cmap]], propvec)
     end
