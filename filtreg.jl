@@ -303,10 +303,8 @@ module filtreg
             if !(isempty(missing_fields))
                 @debug """Adding missing_fields=$missing_fields
                           to transfer=$transfer"""
-                transfer = unique(
-                                  collect(Iterators.flatten([transfer,
-                                                             missing_fields]))
-                                 )
+                request = transfer === nothing ? [] : transfer
+                transfer = string.(unique(collect(Iterators.flatten([request, missing_fields]))))
             end
         end
         @debug "register"
