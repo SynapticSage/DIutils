@@ -8,29 +8,7 @@ module binning
     using LazyGrids: ndgrid
     using ProgressMeter
     using Missings
-
-    # Radius measurements
-    #function vector_dist(vals::Array, center::Array)::Vector{Float32}
-    #    @inbounds @fastmath sqrt.(sum((vals .- center[Utils.na, :]).^2,dims=2)[:,1]) # HUGE SAVINGS FAST MATH HERE
-    #end
-    #function inside(vals::Array, center::Array, radius::Float32)::BitVector
-    #    vector_dist(vals, center) .< radius
-    #end
-    #function get_samptime(vals::Array, center::Array, radius::Float32;
-    #        dt::Float32=1/30)::Float32
-    #    @fastmath sum(inside(vals, center, radius)) * dt
-    #end
-    ## Vector radius measurments
-    #function indiv_dist(vals::Array, center::Array)::Matrix{Float32}
-    #    abs.(vals .- center[Utils.na, :])
-    #end
-    #function inside(vals::Array, center::Array, radius::Vector{Float32})::BitVector
-    #    Utils.squeeze(all(indiv_dist(vals, center) .< radius[Utils.na, :], dims=2))
-    #end
-    #function get_samptime(vals::Array, center::Array, radius::Vector{Float32};
-    #        dt::Float32=1/30)::Float32
-    #    @fastmath sum(inside(vals, center, radius)) * dt
-    #end
+    using LazySets
 
     function center_to_edge(grid::AbstractVector)
         grid = collect(grid)
@@ -116,11 +94,47 @@ module binning
         iterate(zip(g.grid, g.radii), state)
     end
     cenumerate(g::GridAdaptive) = zip(CartesianIndices(g.grid), g)
+    export content
+    """
+        nanradii(g::GridAdaptive)
 
+    gets the location of naned radii
+    """
+    function content(g::GridAdaptive; nantemplate=false)  
+        res = map(x->any(isnan.(x)), g.radii)
+        if nantemplate
+            replace(res, 1=>NaN, 0=>1)
+        else
+            (!).(res)
+        end
+    end
+
+    Base.ndims(grd::GridAdaptive) = length(grd.props)
+
+    function Base.sum(grd::GridAdaptive; dims)
+        dims = Tuple(collect(dims))
+        newdims = setdiff(1:ndims(grd), dims)
+        grid, props, centers = getindex.(grd.grid,[newdims]), 
+                               grd.props[newdims],
+                               grd.centers[newdims]
+        mean_sq(a,b) = sqrt.( a.^2 .+ b.^2 )
+        radii   = accumulate(mean_sq, grd.radii, dims=dims)
+        GridAdaptive(props, centers, grd.edges, grid, radii)
+    end
 
     export get_grid_bounded
     """
-        get_grid_bounded
+        get_grid_bounded(behavior::DataFrame, props::Vector;
+            widths::OrderedDict, boundary::OrderedDict,
+            thresh::Float32=1.25f0, # Threshold in seconds
+            adaptive::Bool=true,
+            dt::Union{Nothing,Float32}=nothing, # Total time of sample
+            radiusinc::Union{Float32,Vector{Float32}}=0.2f0, # Spatial unit of RF
+            ϵ::Float32=0.1f0,
+            maxrad::Union{Float32,Nothing}=nothing,
+            method::Symbol=:converge_to_radius,
+            info::Bool=false,
+            kws...)::GridAdaptive
 
     obtains the dynamic sampling grid from only the animals behavior
 
@@ -135,7 +149,7 @@ module binning
         dt::Union{Nothing,Float32}=nothing, # Total time of sample
         radiusinc::Union{Float32,Vector{Float32}}=0.2f0, # Spatial unit of RF
         ϵ::Float32=0.1f0,
-        maxrad::Union{Float32,Nothing}=nothing,
+        maxrad::Union{Vector{Float32},Float32,Nothing}=nothing,
         method::Symbol=:converge_to_radius,
         info::Bool=false,
         kws...)::GridAdaptive
@@ -182,7 +196,14 @@ module binning
     end
 
     export get_grid
-    function get_grid(behavior::DataFrame, props::Vector;
+    """
+            get_grid(behavior::DataFrame, props::Vector;
+        widths::Union{<:Float32,Vector{<:Float32},OrderedDict},
+        boundary=nothing, other_kws...)::GridAdaptive
+
+    get an adaptive grid object
+    """
+    function get_grid(df::DataFrame, props::Vector;
         widths::Union{<:Float32,Vector{<:Float32},OrderedDict},
         boundary=nothing, other_kws...)::GridAdaptive
         if typeof(widths) <: Float32
@@ -192,10 +213,43 @@ module binning
         else
             @assert(widths isa OrderedDict)
         end
-        bd = get_boundary(behavior, props)
+        bd = get_boundary(df, props)
         boundary = boundary === nothing ? bd :
                    fill_missing_boundary(boundary, bd)
-        get_grid_bounded(behavior, props; widths=widths, boundary, other_kws...)
+        get_grid_bounded(df, props; widths=widths, boundary, other_kws...)
+    end
+    """
+        get_grid(grid::GridAdaptive, task::DataFrames)
+
+    Cuts out points that are out of bounds from the task grid
+    """
+    function get_grid(grid::GridAdaptive, tsk::DataFrame; scale=1)
+        boundarypoints = :epoch in propertynames(tsk) ? 
+            first(groupby(tsk[tsk.name .== "boundary", :],:epoch)) : 
+                 tsk[tsk.name .== "boundary", :]
+        xb, yb = boundarypoints.x, boundarypoints.y
+        append!(xb, xb[1]); append!(yb, yb[1]);
+        taskbound = VPolygon(hcat(xy,yb)'; apply_convex_hull=false)
+        if scale != 1
+            # Get a linear scale
+            q = taskbound .* scale
+            # Get the new boundary
+            V′ = VPolygon(q.M * hcat(q.X.vertices...))
+            # Shift it to the old
+            vdiff = mean(V′.vertices) .- mean(taskbound.vertices)
+            # Get the new polygon
+            taskbound = VPolygon(V′.vertices .- [vdiff])
+        end
+
+        # NOw let's identify the grid inside the task boundary
+        filt = Singleton.(grid.centers) .∈ taskbound
+        centers =  copy(grid.centers)
+        for c ∈ centers[filt]
+            c .= NaN
+        end
+
+        GridAdaptive(grid.props, centers, )
+
     end
 
     function fill_missing_boundary(bd_userinput::AbstractDict,
@@ -456,10 +510,10 @@ module binning
 
     gets the boundary of each property
     """
-    function get_boundary(behavior::DataFrame, props::Vector)::OrderedDict
+    function get_boundary(df::DataFrame, props::Vector)::OrderedDict
         boundary   = OrderedDict{eltype(props),Any}()
         for prop in props
-            boundary[prop]   = extrema(Utils.skipnan(collect(skipmissing(behavior[!,prop]))))
+            boundary[prop]   = extrema(Utils.skipnan(collect(skipmissing(df[!,prop]))))
         end
         boundary
     end
