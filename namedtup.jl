@@ -56,6 +56,7 @@ module namedtup
                     OrderedDict(u=>getproperty(X, u) for u in unspec))
         NamedTuple(out)
     end
+    export pop
     function pop(X::NamedTuple, key::Symbol)
         X = namedtuple_to_dict(X)
         key ∈ keys(X) ? pop!(X, key) : nothing
@@ -67,6 +68,9 @@ module namedtup
             key ∈ keys(X) ? pop!(X, key) : nothing
         end
         NamedTuple(X)
+    end
+    function Base.pop!(X::NamedTuple, key)
+        pop(X,key)
     end
 
     function namedtuple_to_dict(X::NamedTuple)
