@@ -9,6 +9,7 @@ module binning
     using ProgressMeter
     using Missings
     using LazySets
+    using Infiltrator
 
     function center_to_edge(grid::AbstractVector)
         grid = collect(grid)
@@ -47,12 +48,19 @@ module binning
         radii::Union{Array{Float32},
                Array{Vector{Float32}}}
 
-        function GridAdaptive(props::Vector, centers::Union{Array,Tuple})
+        function GridAdaptive(props::Vector, centers::Union{Array,Tuple}; 
+                radiidefault=:default)
             if eltype(props) == Symbol
                 props = String.(props)
             end
+            if radiidefault == :single_halfwidth
+                radii = get_default_radii(centers)
+            elseif radiidefault == :vector_halfwidth
+                radii = get_default_vector_radii(centers)
+            else
+                radii = radiidefault
+            end
             centers = centers isa Array ? Tuple(centers) : centers
-            radii = default_radii(centers)
             GridAdaptive(props, centers, radii)
         end
         function GridAdaptive(props::Vector, centers::Union{<:AbstractArray,Tuple},
@@ -77,17 +85,18 @@ module binning
             edges = Tuple((e...,) for e in edges)
             new(props, centers, edges, grid, radii)
         end
-        function GridAdaptive(props::Vector; width::Vector, boundary::Vector)
+        function GridAdaptive(props::Vector; width::Vector, boundary::Vector,
+                radiidefault::Union{Symbol, Float32, Vector{Float32}}=:default)
             centers = Tuple(Tuple(collect(s:w:e))
                             for (w, (s, e)) in zip(width, boundary))
-            GridAdaptive(props, centers)
+            GridAdaptive(props, centers; radiidefault)
         end
     end
 
 
     # Setup iteration
-    Base.length(g::GridAdaptive) = length(g.grid)
-    Base.size(g::GridAdaptive) = size(g.grid)
+    Base.length(g::GridAdaptive)  = length(g.grid)
+    Base.size(g::GridAdaptive)    = size(g.grid)
     Base.iterate(g::GridAdaptive) = Base.iterate(zip(g.grid, g.radii))
     #Base.done(g::GridAdaptive, state::Int) = length(g.centers) == state
     function Base.iterate(g::GridAdaptive, state::Tuple{Int,Int})
@@ -131,12 +140,17 @@ module binning
             dt::Union{Nothing,Float32}=nothing, # Total time of sample
             radiusinc::Union{Float32,Vector{Float32}}=0.2f0, # Spatial unit of RF
             ϵ::Float32=0.1f0,
-            maxrad::Union{Float32,Nothing}=nothing,
+            maxrad::Union{Vector{Float32},Float32,Nothing}=nothing,
+            radiidefault::Union{Symbol, Float32, Vector{Float32}}=:default,
             method::Symbol=:converge_to_radius,
             info::Bool=false,
             kws...)::GridAdaptive
 
     obtains the dynamic sampling grid from only the animals behavior
+
+    # Parameters
+    radiidefault -- (Optional) 
+        :default|:single_halfwidth|:vector_halfwidth|Float32|Vector{Float32}
 
     ### Notes
     if radiusinc is vector, then it will instead expand a hyperbox instead 
@@ -151,7 +165,9 @@ module binning
         ϵ::Float32=0.1f0,
         maxrad::Union{Vector{Float32},Float32,Nothing}=nothing,
         method::Symbol=:converge_to_radius,
+        radiidefault::Union{Symbol, Float32, Vector{Float32}}=:default,
         info::Bool=false,
+        steplimit=nothing,
         kws...)::GridAdaptive
 
         #ensureTimescale!(behavior)
@@ -161,7 +177,8 @@ module binning
         maxrad = maxrad === nothing ? 3 * maximum(values(widths)) : maxrad
         vals = return_vals(behavior, props)
         cv(x) = collect(values(x))
-        G = GridAdaptive(props; width=cv(widths), boundary=cv(boundary))
+        G = GridAdaptive(props; width=cv(widths), boundary=cv(boundary), 
+                        radiidefault)
         radiusinc = ((valtype(G.radii) <: Vector) && !(typeof(radiusinc) <: Vector)) ?
                     fill(radiusinc, length(G.centers)) : radiusinc
         R = Vector{valtype(G.radii)}(undef, length(G))
@@ -183,9 +200,8 @@ module binning
             @debug "pre $(i)" radius G.radii
             dt = Float32.(dt)
             newradius = method(vals, this_center, radius; dt, thresh, maxrad,
-                radiusinc, ϵ)
+                radiusinc, ϵ, steplimit)
             @debug "post $(i)" newradius G.radii
-            #@infiltrate
             R[index] = newradius
             if !(isdefined(Main, :PlutoRunner))
                 next!(P)
@@ -271,10 +287,12 @@ module binning
     NaN, nullifying this sample.
     """
     function converge_to_radius(vals::Matrix{Float32}, center::Vector{Float32},
-        radius::Float32; dt::Float32, thresh::Float32,
-        maxrad::Float32, radiusinc::Float32, kws...)::Float32
+            radius::Float32; dt::Float32, thresh::Float32, 
+            steplimit::Union{Nothing,Int}=nothing,
+            maxrad::Float32, radiusinc::Float32, kws...)::Float32
         #list = []
         #push!(list, radius)
+        steplimit = steplimit === nothing ? Inf : steplimit
         @inbounds while get_samptime(vals, center, radius; dt) < thresh
             @fastmath radius = radius * radiusinc
             #push!(list, radius)
@@ -282,17 +300,21 @@ module binning
                 radius = NaN32
                 break
             end
+            if (steplimit -= 1) <= 0
+                break
+            end
         end
-        #@infiltrate
         radius
     end
     function converge_to_radius(vals::Matrix{Float32}, center::Vector{Float32},
         radius::Vector{Float32}; dt::Float32, thresh::Float32,
         maxrad::Union{Float32,Vector{Float32}},
+        steplimit=nothing,
         radiusinc::Union{Float32,Vector{Float32}}, kws...)::Vector{Float32}
         #list = []
         #push!(list, radius)
         #radius = copy(radius)
+        steplimit = steplimit === nothing ? Inf : steplimit
         @inbounds while get_samptime(vals, center, radius; dt) < thresh
             @debug radius
             @fastmath radius = radius .* radiusinc
@@ -301,8 +323,10 @@ module binning
                 radius .= NaN32
                 break
             end
+            if (steplimit -= 1) <= 0
+                break
+            end
         end
-        #@infiltrate
         radius
     end
 
@@ -384,7 +408,7 @@ module binning
     Determines how much to expand a hyperphere to fit the corners of the grid
     tagent to the sphere
     """
-    function default_radii(centers::Tuple)::Union{Float32,Vector{Float32}}
+    function get_default_radii(centers::Tuple)::Union{Float32,Vector{Float32}}
         C = Vector{Float32}()
         # Push the max diff of each dimension
         for center in centers
@@ -401,6 +425,20 @@ module binning
             C
         end
     end
+
+    """
+        get_default_vector_radii
+
+    Determines how much to expand a hyperphere to fit the corners of the grid
+    tagent to the sphere
+    """
+    function get_default_vector_radii(centers::Tuple)::Union{Float32,Vector{Float32}}
+        C = Vector{Float32}()
+        # Push the max diff of each dimension
+        C = vcat(centers[:]...)
+        [median(diff(sort(unique(c)))./2) for c in C]
+    end
+
 
     #=
       ___                                              
