@@ -195,7 +195,7 @@ module binning
         end
         @debug "Beginning threaded get_grid_bounded loop"
         #Threads.@threads for (index, (this_center, radius)) in collect(enumerate(G))
-        for (index, (this_center, radius)) in collect(enumerate(G))
+        Threads.@threads for (index, (this_center, radius)) in collect(enumerate(G))
             #i+=1
             @debug "pre $(i)" radius G.radii
             dt = Float32.(dt)
