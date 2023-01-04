@@ -79,10 +79,19 @@ module dict
     end
 
     function load_dict_to_module!(mod::Module, dict::Dict)
+        skipped = []
         for (k,v) in dict
             println("Loading $k")
+            try
             Core.eval(mod, :($(Symbol(k)) = $v))
+            catch
+                push!(skipped, k)
+            end
         end
+        if !isempty(skipped)
+            @warn "skipped" skipped
+        end
+        nothing
     end
 
 
