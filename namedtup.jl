@@ -20,11 +20,11 @@ module namedtup
 
     sorts a named tuple by keys
     """
-    function sortbykey(nt)
+    function sortbykey(nt::T where T <: NamedTuple)
         NamedTuple(sort([pairs(nt)...],by=k->k[1]))
     end
 
-    function ntopt_string(nt::NamedTuple; linker="=>", delim=",", keysort=false)
+    function ntopt_string(nt:: T where T <: NamedTuple; linker="=>", delim=",", keysort=false)
         nt = keysort ? sortbykey(nt) : nt
         desc = ["$(k)$(linker)$(v)" for (k, v) 
                 in zip(keys(nt), values(nt))]
@@ -37,7 +37,7 @@ module namedtup
                        ":"=>"-"
                       )
     end
-    tostring(nt::NamedTuple;kws...) = ntopt_string(nt;kws...)
+    tostring(nt::NamedTuple; kws...) = ntopt_string(nt;kws...)
 
     removeprops(keyset::T where T<:Base.KeySet, key::Vector{Symbol}) =
         removeprops(Vector{NamedTuple}(collect(keyset)), key)
