@@ -15,9 +15,19 @@ module namedtup
     export applyvalues, lambda_key, removeprops, reorderprops
     @reexport using NamedTupleTools
 
+    """
+        sortbykey
 
-    function ntopt_string(nt::NamedTuple; linker="=>", delim=",")
-        desc = ["$(k)$(linker)$(v)" for (k, v) in zip(keys(nt), values(nt))]
+    sorts a named tuple by keys
+    """
+    function sortbykey(nt)
+        NamedTuple(sort([pairs(nt)...],by=k->k[1]))
+    end
+
+    function ntopt_string(nt::NamedTuple; linker="=>", delim=",", keysort=false)
+        nt = keysort ? sortbykey(nt) : nt
+        desc = ["$(k)$(linker)$(v)" for (k, v) 
+                in zip(keys(nt), values(nt))]
         desc = join(desc, delim)
         replace(desc, "OrderedDict" => "",
                        "Dict" => "",
