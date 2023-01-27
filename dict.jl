@@ -94,5 +94,12 @@ module dict
         nothing
     end
 
+    """
+    Base.inv
+
+    invert a dict keys=>values to values=>keys
+    """
+    Base.inv(dict::Dict) = Dict(value => key for (key, value) in dict)
+
 
 end

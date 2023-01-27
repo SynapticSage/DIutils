@@ -37,7 +37,7 @@ module namedtup
                        ":"=>"-"
                       )
     end
-    tostring(nt::NamedTuple; kws...) = ntopt_string(nt;kws...)
+    tostring(nt::NamedTuple; kws...) = ntopt_string(nt; kws...)
 
     removeprops(keyset::T where T<:Base.KeySet, key::Vector{Symbol}) =
         removeprops(Vector{NamedTuple}(collect(keyset)), key)
