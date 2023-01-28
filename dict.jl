@@ -78,9 +78,13 @@ module dict
         filterchange_keys!(D, filter, change)
     end
 
-    function load_dict_to_module!(mod::Module, dict::Dict)
+    function load_dict_to_module!(mod::Module, dict::Dict)::Nothing
+        load_keysvals_to_module!(mod, keys(dict), values(dict))
+    end
+
+    function load_keysvals_to_module!(mod::Module, keys, vals)::Nothing
         skipped = []
-        for (k,v) in dict
+        for (k,v) in zip(keys, vals)
             println("Loading $k")
             try
             Core.eval(mod, :($(Symbol(k)) = $v))
@@ -93,6 +97,7 @@ module dict
         end
         nothing
     end
+
 
     """
     Base.inv
