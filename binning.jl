@@ -53,6 +53,10 @@ module binning
             if eltype(props) == Symbol
                 props = String.(props)
             end
+            if radiidefault == :default
+                radiidefault = radiidefault isa Vector ?
+                    :vector_halfwidth : :single_halfwidth
+            end
             if radiidefault == :single_halfwidth
                 radii = get_default_radii(centers)
             elseif radiidefault == :vector_halfwidth
@@ -76,7 +80,7 @@ module binning
             edges = Tuple((e...,) for e in edges)
             new(props, centers, edges, grid, radii)
         end
-        function GridAdaptive(props::Vector, centers::Tuple, grid::Array, radii::Array)
+        function GridAdaptive(props::Vector, centers::Tuple, grid::Array, radii::Union{Array})
             if eltype(props) == Symbol
                 props = String.(props)
             end

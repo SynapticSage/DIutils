@@ -204,9 +204,15 @@ module filtreg
         return target
     end
     """
-    filter
+        filter(data::DataFrame...; filters::AbstractDict=Dict(),
+                filter_skipmissingcols::Bool=false)
 
     instructions to query/filter values in a set of dataframes
+
+    # Note
+    this method works by copy, as opposed to the other methods which even
+    without the ! symbol operate by reference. I didn't understand this !
+    convention early on well when I started these libraries.
     """
     function filter(data::DataFrame...; filters::AbstractDict=Dict(),
             filter_skipmissingcols::Bool=false,
