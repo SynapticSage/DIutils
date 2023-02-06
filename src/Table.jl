@@ -10,15 +10,9 @@ Module Contents:
 """
 module Table
 
-    using DrWatson
-    using DataFrames
+    using DrWatson, DataFrames, ProgressMeter, Statistics, Blink, TableView,
+          DataStructures, Infiltrator
     using DataFrames: ColumnIndex
-    using ProgressMeter
-    using Statistics
-    using Blink
-    using TableView
-    using DataStructures
-    using Infiltrator
     import ..DIutils as Utils
     using Reexport: @reexport
     export to_dataframe
@@ -313,13 +307,13 @@ module Table
         return spike_cellgroups
     end
 
-    include(srcdir("Table", "clean.jl"))
+    include("Table/clean.jl")
     @reexport using .clean
-    include(srcdir("Table", "convert_types.jl"))
+    include("Table/convert_types.jl")
     @reexport using .convert_types
-    include(srcdir("Table", "group.jl"))
+    include("Table/group.jl")
     @reexport using .group
-    include(srcdir("Table", "columntype.jl"))
+    include("Table/columntype.jl")
     @reexport using .columntype
 
 end

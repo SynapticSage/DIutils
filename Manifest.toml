@@ -2784,14 +2784,6 @@ version = "0.7.4"
 deps = ["InteractiveUtils", "Markdown", "Sockets", "Unicode"]
 uuid = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
 
-[[deps.REPLVim]]
-deps = ["JSON3", "Logging", "REPL", "Sockets", "StructTypes"]
-git-tree-sha1 = "4f492ac2d3a77c1706946ae9101d5b56932bf9e0"
-repo-rev = "main"
-repo-url = "https://github.com/andreypopp/julia-repl-vim.git"
-uuid = "2a140ba1-97ad-47e0-ac3b-8e555ea992ff"
-version = "0.1.0"
-
 [[deps.Random]]
 deps = ["SHA", "Serialization"]
 uuid = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"

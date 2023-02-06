@@ -2,19 +2,11 @@ module DIutils
 
     Utils = DIutils
 
-    using DrWatson
-    using ProgressMeter
-    using Infiltrator
-    using Reexport
+    using DrWatson, ProgressMeter, Infiltrator, Reexport
 
     import Random
-    using CSV, DataFrames
-    using Gadfly
-    using Colors, ColorSchemes
-    #using Pushover
-    using Statistics, NaNStatistics
-    using Plots
-    using ThreadsX
+    using CSV, DataFrames, Colors, ColorSchemes
+    using Statistics, NaNStatistics, Plots, ThreadsX
 
     import SearchSortedNearest
     searchsortednearest = SearchSortedNearest.searchsortednearest
@@ -157,28 +149,28 @@ module DIutils
         end
     end
 
-    guides = Dict(); # shortcut for guides
-    guides[(:x, :stopWell)] = Guide.xlabel("Goal")
-    guides[(:y, :stopWell)] = Guide.ylabel("Goal")
-    guides[(:x, :neuron)] = Guide.xlabel("Neuron")
-    guides[(:y, :neuron)] = Guide.ylabel("Neuron")
-    guides[(:x, :rayleighZ)] = Guide.xlabel("Rayleigh Ζ")
-    guides[(:x, :rayleighZ_diff)] = Guide.xlabel("Rayleigh Z\nDifferences")
-    guides[(:x, :gt_shuffle)] = Guide.xlabel("Percent\nreal > shuff") 
-
-    """
-    TITLE: goalVectorTheme
-    Purpose: theme for goal vector shit
-    """
-    function goalVectorTheme()
-        theme = Theme(major_label_color=colorant"white", major_label_font_size=14pt,
-                      minor_label_color=colorant"white",
-                      key_label_color=colorant"white",
-                      key_title_color=colorant"white",
-                      panel_fill=colorant"black",
-                      background_color=colorant"black")
-        Gadfly.push_theme(theme)
-    end
+    # Move to Plots module
+    # guides = Dict(); # shortcut for guides
+    # guides[(:x, :stopWell)] = Guide.xlabel("Goal")
+    # guides[(:y, :stopWell)] = Guide.ylabel("Goal")
+    # guides[(:x, :neuron)] = Guide.xlabel("Neuron")
+    # guides[(:y, :neuron)] = Guide.ylabel("Neuron")
+    # guides[(:x, :rayleighZ)] = Guide.xlabel("Rayleigh Ζ")
+    # guides[(:x, :rayleighZ_diff)] = Guide.xlabel("Rayleigh Z\nDifferences")
+    # guides[(:x, :gt_shuffle)] = Guide.xlabel("Percent\nreal > shuff") 
+    # """
+    # TITLE: goalVectorTheme
+    # Purpose: theme for goal vector shit
+    # """
+    # function goalVectorTheme()
+    #     theme = Theme(major_label_color=colorant"white", major_label_font_size=14pt,
+    #                   minor_label_color=colorant"white",
+    #                   key_label_color=colorant"white",
+    #                   key_title_color=colorant"white",
+    #                   panel_fill=colorant"black",
+    #                   background_color=colorant"black")
+    #     Gadfly.push_theme(theme)
+    # end
 
     function getPushoverClient()
         token = open(expanduser("~/.pushover.token"),"r") do f
@@ -236,17 +228,17 @@ module DIutils
         Matrix(hcat(C...)')
     end
 
-    include(srcdir("dict.jl"))
-    include(srcdir("namedtup.jl"))
-    include(srcdir("macros.jl"))
-    include(srcdir("binning.jl"))
-    include(srcdir("filtreg.jl"))
-    include(srcdir("arr.jl"))
-    include(srcdir("statistic.jl"))
-    include(srcdir("mlj.jl"))
-    include(srcdir("plotutils.jl"))
-    include(srcdir("clean.jl"))
-    include(srcdir("Table.jl"))
+    include("dict.jl")
+    include("namedtup.jl")
+    include("macros.jl")
+    include("binning.jl")
+    include("filtreg.jl")
+    include("arr.jl")
+    include("statistic.jl")
+    include("mlj.jl")
+    include("plotutils.jl")
+    include("clean.jl")
+    include("Table.jl")
     @reexport using .dict
     @reexport using .namedtup
     @reexport using .macros
@@ -258,8 +250,5 @@ module DIutils
     @reexport using .plotutils
     @reexport using .clean
     @reexport using .Table
-
-    # Aliases
-
 
 end
