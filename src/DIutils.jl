@@ -1,7 +1,5 @@
 module DIutils
 
-    Utils = DIutils
-
     using DrWatson, ProgressMeter, Infiltrator, Reexport
 
     import Random
@@ -9,9 +7,9 @@ module DIutils
     using Statistics, NaNStatistics, Plots, ThreadsX
 
     import SearchSortedNearest
-    searchsortednearest = SearchSortedNearest.searchsortednearest
-    searchsortednext    = SearchSortedNearest.searchsortednext
-    searchsortedprevious    = SearchSortedNearest.searchsortedprevious
+    searchsortednearest  = SearchSortedNearest.searchsortednearest
+    searchsortednext     = SearchSortedNearest.searchsortednext
+    searchsortedprevious = SearchSortedNearest.searchsortedprevious
 
     export skipnan
     export itsizeof, piso
@@ -172,18 +170,24 @@ module DIutils
     #     Gadfly.push_theme(theme)
     # end
 
-    function getPushoverClient()
-        token = open(expanduser("~/.pushover.token"),"r") do f
-            token = read(f, String)
-        end
-        user = open(expanduser("~/.pushover.user"),"r") do f
-            user = read(f, String)
-        end
-        return PushoverClient(user, token)
-    end
+    # function getPushoverClient()
+    #     token = open(expanduser("~/.pushover.token"),"r") do f
+    #         token = read(f, String)
+    #     end
+    #     user = open(expanduser("~/.pushover.user"),"r") do f
+    #         user = read(f, String)
+    #     end
+    #     return PushoverClient(user, token)
+    # end
 
-    function pushover(pos...; kws...)
-        send(getPushoverClient(), pos...; kws...)
+    function pushover(message; title=nothing)
+        # send(getPushoverClient(), pos...; kws...)
+        cmd = if title === nothing
+            `pushover-cli "$message"`
+        else
+            `pushover-cli "$message" "$title"`
+        end
+        run(cmd)
     end
 
 
@@ -193,7 +197,7 @@ module DIutils
         g = zeros(Int,size(X,1))
         #P = Progress(size(X,1))
         for (i,row) in enumerate(eachrow(X))
-            answer = findfirst(Utils.squeeze(all(uX .== row[na, :], dims=2)))
+            answer = findfirst(DIutils.squeeze(all(uX .== row[na, :], dims=2)))
             if answer !== nothing
                 g[i] = answer
             end
@@ -239,16 +243,7 @@ module DIutils
     include("plotutils.jl")
     include("clean.jl")
     include("Table.jl")
-    @reexport using .dict
-    @reexport using .namedtup
-    @reexport using .macros
-    @reexport using .binning
-    @reexport using .filtreg
-    @reexport using .arr
-    @reexport using .statistic
-    @reexport using .mlj
-    @reexport using .plotutils
-    @reexport using .clean
-    @reexport using .Table
-
+    # plotutils.plotutils
+    export dict, namedtup, macros, binning, filtreg, arr, statistic, mlj, plotutils, clean, Table
+    # @reexport using .dict, .namedtup, .macros, .binning, .filtreg, .arr, .statistic, .mlj, .plotutils, .clean, .Table
 end

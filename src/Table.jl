@@ -14,8 +14,7 @@ module Table
           DataStructures, Infiltrator
     using DataFrames: ColumnIndex
     import ..DIutils as Utils
-    using Reexport: @reexport
-    export to_dataframe
+    # using Reexport: @reexport
 
     __revise_mode__ = :evalassign
     ∞ = Inf
@@ -308,14 +307,16 @@ module Table
     end
 
     include("Table/clean.jl")
-    @reexport using .clean
     include("Table/convert_types.jl")
-    @reexport using .convert_types
     include("Table/group.jl")
-    @reexport using .group
     include("Table/columntype.jl")
-    @reexport using .columntype
-
+    # @reexport using .clean, .convert_types, .group, .columntype
+    export clean, convert_types, group, columntype
+    export CItype, CItype_plusNull
+    to_dataframe, from_dimarray = Table.convert_types.to_dataframe, 
+                                  Table.convert_types.from_dimarrary
+    export to_dataframe, from_dimarray
+    
 end
 
     #"""
