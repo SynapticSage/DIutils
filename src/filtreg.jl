@@ -1,9 +1,8 @@
 module filtreg
 
-    import ..Utils
+    import ..DIutils as Utils
 
     findnearest = Utils.searchsortednearest
-    import Utils
     using Statistics, NaNStatistics
     using DataFrames
     import DataFrames: ColumnIndex

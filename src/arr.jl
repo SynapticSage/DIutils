@@ -1,6 +1,6 @@
 module arr
 
-    import ..Utils: na
+    import ..DIutils: na
     using Infiltrator
 
     export permutevec

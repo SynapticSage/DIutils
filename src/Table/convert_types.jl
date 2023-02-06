@@ -6,7 +6,7 @@ module convert_types
     using DataStructures
     using Infiltrator
     using DimensionalData
-    import Utils
+    import ..Table.Utils as Utils
 
     export from_dimarrary
     """

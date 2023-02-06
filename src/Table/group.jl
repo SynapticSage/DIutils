@@ -1,7 +1,7 @@
 module group
 
     import ..Table
-    import Utils
+    import ..Table.Utils as Utils
     using DataFrames
     using DataStructures
     using Infiltrator

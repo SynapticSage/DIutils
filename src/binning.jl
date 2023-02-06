@@ -1,7 +1,7 @@
 module binning
     
     using Statistics
-    import ..Utils
+    import ..DIutils as Utils
     using Entropies
     import DataStructures: OrderedDict
     using DataFrames

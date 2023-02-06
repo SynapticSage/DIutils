@@ -19,8 +19,7 @@ module Table
     using TableView
     using DataStructures
     using Infiltrator
-    import Utils
-    Utils = Utils
+    import ..DIutils as Utils
     using Reexport: @reexport
     export to_dataframe
 

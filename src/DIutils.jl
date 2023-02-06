@@ -1,5 +1,6 @@
 module DIutils
 
+    Utils = DIutils
 
     using DrWatson
     using ProgressMeter

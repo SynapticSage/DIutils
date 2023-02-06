@@ -1,6 +1,6 @@
 module plotutils
 
-    import ..Utils
+    import ..DIutils as Utils
     using Plots
     using Dates
     using ColorSchemes

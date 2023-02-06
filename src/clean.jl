@@ -1,6 +1,6 @@
 module clean
     
-    import ..Utils
+    import ..DIutils as Utils
     using Infiltrator
     using NaNStatistics, Statistics
 
