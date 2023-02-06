@@ -1,4 +1,4 @@
-module Utils
+module DIutils
 
 
     using DrWatson
@@ -235,16 +235,17 @@ module Utils
         Matrix(hcat(C...)')
     end
 
-    include(srcdir("Utils", "dict.jl"))
-    include(srcdir("Utils", "namedtup.jl"))
-    include(srcdir("Utils", "macros.jl"))
-    include(srcdir("Utils", "binning.jl"))
-    include(srcdir("Utils", "filtreg.jl"))
-    include(srcdir("Utils", "arr.jl"))
-    include(srcdir("Utils", "statistic.jl"))
-    include(srcdir("Utils", "mlj.jl"))
-    include(srcdir("Utils", "plotutils.jl"))
-    include(srcdir("Utils", "clean.jl"))
+    include(srcdir("dict.jl"))
+    include(srcdir("namedtup.jl"))
+    include(srcdir("macros.jl"))
+    include(srcdir("binning.jl"))
+    include(srcdir("filtreg.jl"))
+    include(srcdir("arr.jl"))
+    include(srcdir("statistic.jl"))
+    include(srcdir("mlj.jl"))
+    include(srcdir("plotutils.jl"))
+    include(srcdir("clean.jl"))
+    include(srcdir("Table.jl"))
     @reexport using .dict
     @reexport using .namedtup
     @reexport using .macros
@@ -255,6 +256,7 @@ module Utils
     @reexport using .mlj
     @reexport using .plotutils
     @reexport using .clean
+    @reexport using .Table
 
     # Aliases
 
