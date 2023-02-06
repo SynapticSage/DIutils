@@ -1,6 +1,7 @@
 name = "DIutils"
-uuid = "6c9d06fb-25ba-4ee3-a449-584350dba86f"
-authors = ["Ryan Young <ryoung-at-brandeis-dot-edu>"]
+uuid = "c2ca1ded-f992-4ce3-97e2-f83a2541d925"
+authors = ["Ryan <ryoung@brandeis.edu>"]
+version = "0.1.0"
 
 [deps]
 ArgParse = "c7e460c6-2fb9-53a9-8c5b-16f535851c63"
