@@ -180,6 +180,7 @@ module DIutils
     #     return PushoverClient(user, token)
     # end
 
+    export pushover
     function pushover(message; title=nothing)
         # send(getPushoverClient(), pos...; kws...)
         cmd = if title === nothing

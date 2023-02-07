@@ -1,6 +1,0 @@
-module Statistic
-
-
-
-
-end

@@ -1,6 +1,8 @@
 
 module  smooth
 
+    using ImageFiltering
+
     """
      gauss
 
