@@ -18,8 +18,15 @@ module plotutils
 
     export getplotcolor
     function getplotcolor(propvec::AbstractVector, cmap::Symbol)
-        propvec = Utils.norm_extrema(propvec)
-        get.([colorschemes[cmap]], propvec)
+        nans   = isnan.(propvec)
+        valids = (!).(nans)
+
+        propvec[valids] = Utils.norm_extrema(propvec[valids])
+
+        results = fill(RGB(NaN,NaN,NaN), size(propvec))
+        results[valid] = get.([colorschemes[cmap]], propvec[valid])
+
+        results
     end
 
     """
