@@ -4,7 +4,7 @@ module filtreg
 
     findnearest = DIutils.searchsortednearest
     findnext    = DIutils.searchsortednext
-    findprev    = DIutils.searchsortedprev
+    findprev    = DIutils.searchsortedprevious
     using Statistics, NaNStatistics
     using DataFrames
     import DataFrames: ColumnIndex
