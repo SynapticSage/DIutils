@@ -2,7 +2,9 @@ module filtreg
 
     import ..DIutils as Utils
 
-    findnearest = Utils.searchsortednearest
+    findnearest = DIutils.searchsortednearest
+    findnext    = DIutils.searchsortednext
+    findprev    = DIutils.searchsortedprev
     using Statistics, NaNStatistics
     using DataFrames
     import DataFrames: ColumnIndex
@@ -58,8 +60,17 @@ module filtreg
             on::CItype="time",
             tolerance::Union{Float64, Nothing}=0.9999,
             tolerance_violation=missing,
-            convert_type::Type=Float64
+            convert_type::Type=Float64,
+            match=:nearest
         )::Tuple{DataFrame, DataFrame} 
+
+        match = if match == :nearest
+            findnearest
+        elseif match == :next
+            findnext
+        elseif match in [:prev, :previous]
+            findprev
+        end
         if tolerance === nothing
             @warn "No given tolerance"
         end
@@ -90,7 +101,7 @@ module filtreg
 
         # FindNearest
         match_on_source = (match_on_source,)
-        indices_of_source_samples_in_target = findnearest.(match_on_source,
+        indices_of_source_samples_in_target = match.(match_on_source,
                                                            match_on_target)
 
         # Tolerance
