@@ -1,6 +1,6 @@
 module filtreg
 
-    import ..DIutils as Utils
+    import ..DIutils 
 
     findnearest = DIutils.searchsortednearest
     findnext    = DIutils.searchsortednext
@@ -331,7 +331,7 @@ module filtreg
         @debug "filter"
         if filters !== nothing
         @info filter_skipmissingcols
-            source, target = Utils.filtreg.filter(source, target; filters=filters, filter_skipmissingcols)
+            source, target = DIutils.filtreg.filter(source, target; filters=filters, filter_skipmissingcols)
         end
         return [source, target]
     end
