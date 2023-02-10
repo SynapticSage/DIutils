@@ -13,7 +13,7 @@ module Table
     using DrWatson, DataFrames, ProgressMeter, Statistics, Blink, TableView,
           DataStructures, Infiltrator
     using DataFrames: ColumnIndex
-    import ..DIutils as Utils
+    import ..DIutils 
     # using Reexport: @reexport
 
     __revise_mode__ = :evalassign

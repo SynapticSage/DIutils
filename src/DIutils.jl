@@ -58,6 +58,7 @@ module DIutils
     #    end
     #end
 
+    export norm_extrema
     function norm_extrema(x::AbstractArray{T1}, 
              minmax::Union{Vector{T2},Tuple{T2, T2}}=[0,1] ) where
         T1 <: Real where T2 <: Real
@@ -71,7 +72,9 @@ module DIutils
             x = x .* diff(minmax) .+ minmax[1]
         end
     end
-    function nannorm_extrema(x::AbstractArray{T1}, minmax::Union{Vector{T2},Tuple{T2, T2}}) where
+
+    export nannorm_extrema
+    function nannorm_extrema(x::AbstractArray{T1}, minmax::Union{Vector{T2},Tuple{T2, T2}}=(0,1)) where
         T1 <: Real where T2 <: Real
         if minmax isa Tuple
             minmax = [minmax...]

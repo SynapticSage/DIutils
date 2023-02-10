@@ -9,6 +9,7 @@ module namedtup
     using DataFrames
     using DataStructures: OrderedDict
     using Infiltrator
+    using TextWrap
 
     export namedtupkeys_to_df, namedtuple_to_dict, remove_key_item
     export bestpartialmatch, argbestpartialmatch, countmatch
@@ -24,20 +25,34 @@ module namedtup
         NamedTuple(sort([pairs(nt)...],by=k->k[1]))
     end
 
-    function ntopt_string(nt:: T where T <: NamedTuple; linker="=>", delim=",", keysort=false)
+    """
+        ntopt_string(nt:: T where T <: NamedTuple; linker="=>", delim=",",
+        keysort=false)
+    
+    this creates a formatteed string out of a NamedTuple
+    """
+    function ntopt_string(nt:: T where T <: NamedTuple; linker="=>", delim=",",
+            keysort=false, wrapkws=Dict(), wrap=nothing)::String
+        if wrap !== nothing
+            @infiltrate
+            push!(wrapkws, :wrap => wrap)
+        end
         nt = keysort ? sortbykey(nt) : nt
         desc = ["$(k)$(linker)$(v)" for (k, v) 
                 in zip(keys(nt), values(nt))]
         desc = join(desc, delim)
-        replace(desc, "OrderedDict" => "",
+        TextWrap.wrap(replace(desc, "OrderedDict" => "",
                        "Dict" => "",
                        "String" => "",
                        "Float32" => "", "Float64" => "", "{," => "", 
                        "{"=>"", "}" => "",
                        ":"=>"-"
-                      )
+                      ); wrapkws...)
     end
-    tostring(nt::NamedTuple; kws...) = ntopt_string(nt; kws...)
+    """
+    alias for ntopt_string
+    """
+    tostring(nt::NamedTuple; kws...)::String = ntopt_string(nt; kws...)
 
     removeprops(keyset::T where T<:Base.KeySet, key::Vector{Symbol}) =
         removeprops(Vector{NamedTuple}(collect(keyset)), key)

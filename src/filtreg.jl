@@ -92,12 +92,10 @@ module filtreg
         else
             ct = convert_type
         end
-        match_on_target = typeof(match_on_target) == ct ?
-                          match_on_target : convert(Vector{ct},
-                                                    match_on_target)
-        match_on_source = typeof(match_on_target) == ct ?
-                          match_on_source : convert(Vector{ct},
-                                                    match_on_source)
+        match_on_target = typeof(match_on_target) == ct ? match_on_target :
+                          convert(Vector{ct}, match_on_target)
+        match_on_source = typeof(match_on_target) == ct ? match_on_source :
+                          convert(Vector{ct}, match_on_source)
 
         # FindNearest
         match_on_source = (match_on_source,)
