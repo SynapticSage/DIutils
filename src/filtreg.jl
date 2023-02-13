@@ -2,6 +2,7 @@ module filtreg
 
     import ..DIutils 
 
+
     findnearest = DIutils.searchsortednearest
     findnext    = DIutils.searchsortednext
     findprev    = DIutils.searchsortedprevious
@@ -140,10 +141,10 @@ module filtreg
             end
 
             # Write in tolerance violations
-            if  tolerance !== nothing &&
+            if  (tolerance !== nothing &&
                 tolerance_violation !== nothing && 
-                any_out_of_tol
-                @inbounds target[out_of_tolerance, col] .= tolerance_violation
+                any_out_of_tol)
+                    @inbounds target[nonmissing .&& out_of_tolerance , col] .= tolerance_violation
             end
         end
 

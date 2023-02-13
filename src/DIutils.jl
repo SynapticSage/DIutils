@@ -235,6 +235,7 @@ module DIutils
         @time C = collect.(getproperty.(CartesianIndices(A),:I))
         Matrix(hcat(C...)')
     end
+    
 
     include("dict.jl")
     include("namedtup.jl")
@@ -250,4 +251,6 @@ module DIutils
     # plotutils.plotutils
     export dict, namedtup, macros, binning, filtreg, arr, statistic, mlj, plotutils, clean, Table
     # @reexport using .dict, .namedtup, .macros, .binning, .filtreg, .arr, .statistic, .mlj, .plotutils, .clean, .Table
+    #Reexport.reexport(plotutils)
+
 end

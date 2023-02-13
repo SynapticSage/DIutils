@@ -1,7 +1,7 @@
 
 module  smooth
 
-    using ImageFiltering
+    using ImageFiltering, DataFrames
 
     """
      gauss
