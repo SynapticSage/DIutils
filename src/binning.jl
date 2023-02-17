@@ -222,6 +222,9 @@ module binning
         boundary=nothing, other_kws...)::GridAdaptive
 
     get an adaptive grid object
+
+    ### other_kws
+    see [`get_grid_bounded`](@ref)
     """
     function get_grid(df::DataFrame, props::Vector;
         widths::Union{<:Float32,Vector{<:Float32},OrderedDict},
@@ -466,15 +469,26 @@ module binning
         zip(g.grid.grid, inds)
     end
     export get_occupancy_indexed
+    """
+        get_occupancy_indexed(data::DataFrame, 
+                           grid::GridAdaptive)::IndexedAdaptiveOcc
+
+    Grab the occpancy struct and annotate it with the actual indices
+    in the dataframe we're getting the occupancy of. In other words,
+    give us the counts per bin and where those counts land in the
+    actual `data`.
+    """
     function get_occupancy_indexed(data::DataFrame, 
                            grid::GridAdaptive)::IndexedAdaptiveOcc
         vals = return_vals(data, grid.props)
         count = zeros(Int32, size(grid))
         inds = Array{Union{Missing,Vector{Int}}}(missing, size(grid)...)
-        for (index, (center, radius)) in collect(enumerate(grid))
-            binary_locs = inside(vals, center, radius)
+        prog = Progress(length(grid); desc="Finding occupancy")
+        Threads.@threads for (index, (center, radius)) in collect(enumerate(grid))
+            binary_locs = inside(vals, center, radius) # TODO this line can be spedup with iterative in_range checks
             @inbounds inds[index] = findall(binary_locs)
             @inbounds count[index] = sum(binary_locs)
+            next!(prog)
         end
         count = reshape(count, size(grid))
         inds  = reshape(inds, size(grid))
@@ -531,10 +545,12 @@ module binning
     # Vector radius measurments
     export inside
     function inside(vals::Array, center::Array, radius::Float32)::BitVector
-        vector_dist(vals, center) .< radius
+        # vector_dist(vals, center) .< radius
+        vec(all(hcat([(v .- c) .< radius for (v,c) in zip(eachcol(vals), center)]...), dims=2))
     end
     function inside(vals::Array, center::Array, radius::Vector{Float32})::BitVector
-        Utils.squeeze(all(indiv_dist(vals, center) .< radius[Utils.na, :], dims=2))
+        # Utils.squeeze(all(indiv_dist(vals, center) .< radius[Utils.na, :], dims=2))
+        vec(all(hcat([(v .- c) .< r for (v,c,r) in zip(eachcol(vals), center, radius)]...), dims=2))
     end
     export get_samptime
     function get_samptime(vals::Array, center::Array, radius::Float32;

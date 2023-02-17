@@ -6,7 +6,8 @@ module convert_types
     using DataStructures
     using Infiltrator
     using DimensionalData
-    import DIutils as Utils
+    import DIutils 
+    using DIutils.binning: edge_to_center
 
     export from_dimarrary
     """
@@ -20,7 +21,7 @@ module convert_types
         time = collect(dims[1])
         X = DataFrame([time, Vector.(collect(eachrow(X)))], [:time, :data])
         for (source, on, transfer) in registrant
-            Utils.filtreg.register(source, X; on, transfer)
+            DIutils.filtreg.register(source, X; on, transfer)
         end
         X
     end
@@ -110,7 +111,7 @@ module convert_types
         return D
     end
     function to_dataframe(fields::T where T <: NamedTuple; kws...)::DataFrame
-        D = to_dataframe(Utils.namedtuple_to_dict(fields); kws...) 
+        D = to_dataframe(DIutils.namedtuple_to_dict(fields); kws...) 
         return D
     end
     function to_dataframe(X::DataFrame; other_labels=nothing, kws...)::DataFrame

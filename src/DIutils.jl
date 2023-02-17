@@ -14,8 +14,8 @@ module DIutils
     export skipnan
     export itsizeof, piso
     export searchsortednext, searchsortednearest
-    export remove_key_item
-    export thropt
+    # export remove_key_item
+    # export thropt
 
     skipnan(x) = Iterators.filter(!isnan, x)
     na = [CartesianIndex()]
