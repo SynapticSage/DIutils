@@ -102,6 +102,7 @@ module binning
     Base.length(g::GridAdaptive)  = length(g.grid)
     Base.size(g::GridAdaptive)    = size(g.grid)
     Base.iterate(g::GridAdaptive) = Base.iterate(zip(g.grid, g.radii))
+    Base.getindex(g::GridAdaptive, I...) = g.grid[I...], g.radii[I...]
     #Base.done(g::GridAdaptive, state::Int) = length(g.centers) == state
     function Base.iterate(g::GridAdaptive, state::Tuple{Int,Int})
         iterate(zip(g.grid, g.radii), state)
@@ -486,7 +487,7 @@ module binning
         prog = Progress(length(grid); desc="Finding occupancy")
         Threads.@threads for (index, (center, radius)) in collect(enumerate(grid))
             binary_locs = inside(vals, center, radius) # TODO this line can be spedup with iterative in_range checks
-            @inbounds inds[index] = findall(binary_locs)
+            @inbounds inds[index]  = findall(binary_locs)
             @inbounds count[index] = sum(binary_locs)
             next!(prog)
         end
@@ -531,6 +532,14 @@ module binning
         AdaptiveOcc(grid, count, prob, camerarate)
     end
 
+    # Iteration and size/length of indexed
+    Base.length(o::Occupancy)           = length(o.grid)
+    Base.size(o::Occupancy)             = size(o.grid)
+    Base.iterate(o::IndexedAdaptiveOcc) = Base.iterate(zip(o.inds, o.grid))
+    Base.in(ind::Int, o::IndexedAdaptiveOcc) = [ind in I for I in o.inds]
+    Base.findall(ind::Int, o::IndexedAdaptiveOcc) = findall(ind in o)
+    Base.getindex(o::IndexedAdaptiveOcc, I::Int) = o.inds[I], o.grid[I]
+
     # ----------------
     # Helper functions
     # ----------------
@@ -546,11 +555,13 @@ module binning
     export inside
     function inside(vals::Array, center::Array, radius::Float32)::BitVector
         # vector_dist(vals, center) .< radius
-        vec(all(hcat([(v .- c) .< radius for (v,c) in zip(eachcol(vals), center)]...), dims=2))
+        @fastmath vec(all(hcat([abs.(v .- c) .< radius 
+            for (v,c) in zip(eachcol(vals), center)]...), dims=2))
     end
     function inside(vals::Array, center::Array, radius::Vector{Float32})::BitVector
         # Utils.squeeze(all(indiv_dist(vals, center) .< radius[Utils.na, :], dims=2))
-        vec(all(hcat([(v .- c) .< r for (v,c,r) in zip(eachcol(vals), center, radius)]...), dims=2))
+        @fastmath vec(all(hcat([abs.(v .- c) .< r 
+            for (v,c,r) in zip(eachcol(vals), center, radius)]...), dims=2))
     end
     export get_samptime
     function get_samptime(vals::Array, center::Array, radius::Float32;
