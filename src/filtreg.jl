@@ -56,7 +56,7 @@ module filtreg
 
     column
     """
-    function register(source::DataFrame, target::DataFrame; 
+    function register(source::AbstractDataFrame, target::AbstractDataFrame; 
             transfer::Vector{<:CItype},
             on::CItype="time",
             tolerance::Union{Float64, Nothing}=0.9999,
@@ -88,7 +88,8 @@ module filtreg
         match_on_source = source[:, on]
         match_on_target = target[:, on]
 
-        if any(ismissing.(match_on_target))
+        missing_in_target = any(ismissing.(match_on_target))
+        if missing_in_target
             ct = Union{convert_type, Missing}
         else
             ct = convert_type
@@ -97,22 +98,27 @@ module filtreg
                           convert(Vector{ct}, match_on_target)
         match_on_source = typeof(match_on_target) == ct ? match_on_source :
                           convert(Vector{ct}, match_on_source)
+        nonmissing = (!).(ismissing.(match_on_target))
+        nonmissing_source = (!).(ismissing.(match_on_source))
 
         # FindNearest
         match_on_source = (match_on_source,)
-        indices_of_source_samples_in_target = match.(match_on_source,
-                                                           match_on_target)
+        try
+            indices_of_source_samples_in_target = match.(match_on_source, 
+                                                match_on_target[nonmissing])
+        catch exception
+            @infiltrate
+        end
 
         # Tolerance
         if tolerance !== nothing
             δ = @inbounds source[indices_of_source_samples_in_target, on] -
-                target[:, on]
+                target[nonmissing, on]
             out_of_tolerance = abs.(δ) .> tolerance
         else
             out_of_tolerance = zeros(Bool, size(target,1))
         end
-        nonmissing = (!).(ismissing.(out_of_tolerance))
-        any_out_of_tol = any(out_of_tolerance[nonmissing])
+        any_out_of_tol = any(out_of_tolerance)
 
         if tolerance_violation === nothing
             target = @inbounds target[Not(out_of_tolerance), :]
