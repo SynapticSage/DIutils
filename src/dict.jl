@@ -98,6 +98,10 @@ module dict
         nothing
     end
 
+    function load_jld2_to_module!(fn::String)::Nothing
+        
+    end
+
 
     """
     Base.inv

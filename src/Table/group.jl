@@ -1,7 +1,7 @@
 module group
 
     import ..Table
-    import ..Table.Utils as Utils
+    import ...DIutils
     using DataFrames
     using DataStructures
     using Infiltrator
@@ -27,8 +27,8 @@ module group
         name = name === nothing ? periods[1,:prop] : name
         period_col = period_col === nothing ? name : period_col
         data[!,period_col] = Vector{Union{type,Missing}}(missing, size(data,1))
-        period_start = allowmissing(Utils.searchsortedprevious.([periods.start], data.time))
-        period_stop  = Utils.searchsortednext.([periods.stop],  data.time)
+        period_start = allowmissing(DIutils.searchsortedprevious.([periods.start], data.time))
+        period_stop  = DIutils.searchsortednext.([periods.stop],  data.time)
         period_start[period_start .!= period_stop] .= missing
         data[!,period_col] = period_start
         data

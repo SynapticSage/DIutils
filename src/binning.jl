@@ -462,13 +462,22 @@ module binning
         count::Array{Int32}
         prob::Probabilities
         camerarate::Float32
-        inds::Array{Vector{Int32}}
+        # --- Indexing  ----
+        inds::Array{Vector{Int32}} # per GRID item which index of DATA 
+                                   # (same shape determine which data indices live there)
+        datainds::Vector{Union{Missing,Vector{Int32}}} # per item of the DATA input, which index into GRID
+                                       # (the inverse of inds, in a sense)
     end
-    Base.length(g::IndexedAdaptiveOcc) = length(g.grid)
-    Base.size(g::IndexedAdaptiveOcc)   = size(g.grid)
-    Base.iterate(g::IndexedAdaptiveOcc) = Base.iterate(V) do V
-        zip(g.grid.grid, inds)
-    end
+    Base.length(g::IndexedAdaptiveOcc)  = length(g.grid)
+    Base.size(g::IndexedAdaptiveOcc)    = size(g.grid)
+    Base.iterate(o::IndexedAdaptiveOcc)    = Base.iterate(zip(o.grid.grid, o.inds))
+    Base.iterate(o::IndexedAdaptiveOcc, s) = Base.iterate(zip(o.grid.grid, o.inds), s)
+    Base.in(ind::Int, o::IndexedAdaptiveOcc) = [ind in I for I in o.inds]
+    Base.findall(ind::Int, o::IndexedAdaptiveOcc) = findall(ind in o)
+    Base.getindex(o::IndexedAdaptiveOcc, I::Int) = o.grid[I], o.inds[I]
+    Base.show(io::IO, o::IndexedAdaptiveOcc) = println(io, "Indexed Adaptive Occupancy\n", 
+                                        sum(o.count) < 1000 ? "Count = $(o.count)" : 
+                                            "Total count = $(sum(o.count))")
     export get_occupancy_indexed
     """
         get_occupancy_indexed(data::DataFrame, 
@@ -491,18 +500,33 @@ module binning
             @inbounds count[index] = sum(binary_locs)
             next!(prog)
         end
+
         count = reshape(count, size(grid))
-        inds  = reshape(inds, size(grid))
-        prob = Probabilities(Float32.(vec(count)))
+        prob  = Probabilities(Float32.(vec(count)))
+
+        inds     = reshape(inds, size(grid))
+        datainds = Vector{Union{Missing,Vector{Int32}}}(missing, size(data, 1))
+        @time for (ind_of_grid, matching_data_inds) in enumerate(inds)
+            missings = ismissing.(datainds[matching_data_inds])
+            if any(missings)
+                for i in matching_data_inds[missings]
+                    datainds[i] = []
+                end
+            end
+            push!.(datainds[matching_data_inds], [ind_of_grid])
+        end
+        
         if :time in propertynames(data)
-            camerarate = Float32(1 / median(diff(data.time)))
+            period = median(diff(data.time))
+            camerarate = Float32(1 / period)
             if camerarate > 300
                 camerarate /= 60
             end
         else
             camerarate = 1
         end
-        IndexedAdaptiveOcc(grid, count, prob, camerarate, inds)
+
+        IndexedAdaptiveOcc(grid, count, prob, camerarate, inds, datainds)
     end
 
     export AdaptiveOcc
@@ -531,14 +555,6 @@ module binning
         end
         AdaptiveOcc(grid, count, prob, camerarate)
     end
-
-    # Iteration and size/length of indexed
-    Base.length(o::Occupancy)           = length(o.grid)
-    Base.size(o::Occupancy)             = size(o.grid)
-    Base.iterate(o::IndexedAdaptiveOcc) = Base.iterate(zip(o.inds, o.grid))
-    Base.in(ind::Int, o::IndexedAdaptiveOcc) = [ind in I for I in o.inds]
-    Base.findall(ind::Int, o::IndexedAdaptiveOcc) = findall(ind in o)
-    Base.getindex(o::IndexedAdaptiveOcc, I::Int) = o.inds[I], o.grid[I]
 
     # ----------------
     # Helper functions
