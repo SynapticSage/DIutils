@@ -56,7 +56,7 @@ module filtreg
 
     column
     """
-    function register(source::DataFrame, target::DataFrame; 
+    function register(source::AbstractDataFrame, target::AbstractDataFrame; 
             transfer::Vector{<:CItype},
             on::CItype="time",
             tolerance::Union{Float64, Nothing}=0.9999,
