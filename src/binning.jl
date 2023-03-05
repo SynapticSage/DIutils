@@ -22,8 +22,12 @@ module binning
         grid = dropdims(mean([vec(grid[1:end-1]) vec(grid[2:end])], dims=2), dims=2)
     end
 
-    digitize(X::AbstractArray, nbins) = 
-        Int16.(floor.(Utils.norm_extrema(X, [0, nbins-1])) .+ 1)
+    function digitize(X::AbstractArray, nbins) 
+        nbins = nbins + 1
+        X = Int16.(floor.(Utils.norm_extrema(X, [0, nbins-1])) .+ 1)
+        X[argmax(X)] = nbins-1
+        X
+    end
 
     export Grid
     abstract type Grid end
