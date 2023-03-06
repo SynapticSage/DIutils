@@ -494,13 +494,16 @@ module binning
     """
     function get_occupancy_indexed(data::DataFrame, 
                            grid::GridAdaptive)::IndexedAdaptiveOcc
+        originalinds = 1:size(data,1)
+        missings = vec(any(Matrix(ismissing.(data[!,grid.props])),dims=2))
+        originds = originalinds[(!).(missings)]
         vals = return_vals(data, grid.props)
         count = zeros(Int32, size(grid))
         inds = Array{Union{Missing,Vector{Int}}}(missing, size(grid)...)
         prog = Progress(length(grid); desc="Finding occupancy")
         Threads.@threads for (index, (center, radius)) in collect(enumerate(grid))
             binary_locs = inside(vals, center, radius) # TODO this line can be spedup with iterative in_range checks
-            @inbounds inds[index]  = findall(binary_locs)
+            @inbounds inds[index]  = originds[findall(binary_locs)]
             @inbounds count[index] = sum(binary_locs)
             next!(prog)
         end
@@ -509,14 +512,18 @@ module binning
         prob  = Probabilities(Float32.(vec(count)))
 
         inds     = reshape(inds, size(grid))
-        datainds = Vector{Union{Missing,Vector{Int32}}}(missing, size(data, 1))
+        datainds = Vector{Union{Missing,Vector{Int32}}}(missing, 
+                                                 size(originalinds, 1))
         @time for (ind_of_grid, matching_data_inds) in enumerate(inds)
+            # Place an empty set into any missings locations []
             missings = ismissing.(datainds[matching_data_inds])
+
             if any(missings)
                 for i in matching_data_inds[missings]
                     datainds[i] = []
                 end
             end
+            # And push the remaining into their location of interest
             push!.(datainds[matching_data_inds], [ind_of_grid])
         end
         
