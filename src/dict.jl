@@ -98,6 +98,12 @@ module dict
         nothing
     end
 
+    function load_exfiltrated!(mod::Module, sess::Infiltrator.Session)
+        k = propertynames(sess)        
+        v = [getproperty(sess, kk) for kk in k]
+        load_keysvals_to_module!(mod, k, v)
+    end
+
     function load_jld2_to_module!(fn::String)::Nothing
         
     end
@@ -110,5 +116,38 @@ module dict
     """
     Base.inv(dict::Dict) = Dict(value => key for (key, value) in dict)
 
+    export setkeybyfirst
+    """
+        setkeybyfirst(d::Dict)
+    
+    set a dict key type by the type of the first key
+    """
+    function setkeybyfirst(d::Dict)
+        k = first(keys(d))
+        Dict{typeof(k),valtype(d)}(d)
+    end
+
+    export setvalbyfirst
+    """
+        setvalbyfirst(d::Dict)
+    
+    set a dict value type by the type of the first value
+    """
+    function setvalbyfirst(d::Dict)
+        v = first(values(d))
+        Dict{keytype(d),typeof(v)}(d)
+    end
+
+    export setbyfirst
+    """
+        setbyfirst(d::Dict)
+    
+    set a dict key and value type by the type of the first key and value
+    """
+    function setbyfirst(d::Dict)
+        k = first(keys(d))
+        v = first(values(d))
+        Dict{typeof(k),typeof(v)}(d)
+    end
 
 end
