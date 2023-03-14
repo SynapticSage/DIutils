@@ -12,7 +12,7 @@ module arr
         V[ind...]
     end
 
-    function atleast2d(X::Array)
+    function atleast2d(X::AbstractArray)
         if ndims(X) == 1
             X[:, na]
         else
@@ -20,7 +20,7 @@ module arr
         end
     end
 
-    function atleast3d(X::Array)
+    function atleast3d(X::AbstractArray)
         if ndims(X) == 1
             X[:, na, na]
         elseif ndims(X) == 2
