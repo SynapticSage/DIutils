@@ -97,6 +97,10 @@ module namedtup
     function Base.pop!(X::NamedTuple, key)
         pop(X,key)
     end
+    function pop(X::Base.Pairs, kws...)
+        X = pop(NamedTuple(X), kws...)
+        pairs(X)
+    end
 
     function namedtuple_to_dict(X::NamedTuple)
         Dict(zip(keys(X), values(X)))
