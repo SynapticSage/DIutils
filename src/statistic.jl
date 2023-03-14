@@ -1,6 +1,9 @@
 module statistic
 
     export  pfunc
+    using StatsBase
+    using Infiltrator
+    import ..DIutils
 
     function pfunc(x::Real)
         if x < 1e-3
@@ -53,4 +56,18 @@ module statistic
     """
     function ciArray(x, func; N, dims)
     end
+
+    """
+        dummycode
+    
+    (create documentation here)
+    """
+    function dummycode(X::AbstractMatrix)
+        hcat([dummycode(x) for x in eachcol(X)]...)
+    end
+    function dummycode(X::AbstractVector)
+        UX = sort(unique(X))
+        X = X .== UX'
+    end
+
 end
