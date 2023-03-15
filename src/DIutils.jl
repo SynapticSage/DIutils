@@ -5,6 +5,7 @@ module DIutils
     import Random
     using CSV, DataFrames, Colors, ColorSchemes
     using Statistics, NaNStatistics, Plots, ThreadsX
+    import DIutils
 
     import SearchSortedNearest
     searchsortednearest  = SearchSortedNearest.searchsortednearest
