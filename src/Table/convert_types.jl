@@ -169,7 +169,6 @@ module convert_types
 
             if kn == "unnamed"
                 @debug "unhandled key_name" level key key_name other_labels
-                @infiltrate
             end
 
             if kn !== nothing
@@ -189,7 +188,6 @@ module convert_types
                 catch exception
                     if !haskey(_level_hiccup_tracker, level)
                         @warn "hiccup" level key key_name other_labels
-                        @infiltrate
                         _level_hiccup_tracker[level] = 
                             (;key, fields, key_name, level, exception)
                     end
