@@ -17,15 +17,28 @@ module plotutils
     # UTILTIES
 
     export getplotcolor
-    function getplotcolor(propvec::AbstractVector, cmap::Symbol)
+    function getplotcolor(propvec::AbstractArray, cmap::Symbol=:vik;
+                         alpha=:none, alpha_min=0.1, alpha_max=1.0)
+        getplotcolor(propvec, colorschemes[cmap]; alpha, alpha_min, alpha_max)
+    end
+    function getplotcolor(propvec::AbstractArray, cmap::ColorScheme;
+                         alpha=:none, alpha_min=0.1, alpha_max=1.0)
         nans   = isnan.(propvec)
         valids = (!).(nans)
         propvec = Float64.(propvec)
-
-        propvec[valids] = Utils.norm_extrema(propvec[valids])
-
+        # propvec[valids] = Utils.norm_extrema(propvec[valids])
         results = fill(RGB(NaN,NaN,NaN), size(propvec))
-        results[valids] = get.([colorschemes[cmap]], propvec[valids])
+        results[valids] = get(cmap, propvec[valids], :extrema)
+        if alpha == :lowtohigh
+            results[valids] = [RGBA(c.r, c.b, c.b, p) for (c,p) 
+                in zip(results[valids], propvec[valids])]
+        elseif alpha == :hightolow
+            results[valids] = [RGBA(c.r, c.b, c.b, 1-p) for (c,p) 
+                in zip(results[valids], propvec[valids])]
+        elseif alpha == :none
+        else
+            throw(ArgumentError("alpha must be :lowtohigh, :hightolow, or :none"))
+        end
 
         results
     end
@@ -49,6 +62,20 @@ module plotutils
     end
     get_ylims(x::Plots.Subplot) = ylims(x)
     get_ylims(x) = @infiltrate # If we don't recognize the type, infiltrate
+
+
+    export get_lims
+    """
+        get_lims
+    grabs the quantiles for each row in the matrix
+    """
+    function get_lims(X::Matrix, q=0.01)
+        lims = []
+        for i in axis(X, 1)
+            push!(lims, quantile(X[i,:], [q, 1-q]))
+        end
+        [(q...,) for q in lims]
+    end
 
     #    _  _     ____       _    
     #  _| || |_  / ___|  ___| |_  
