@@ -30,6 +30,30 @@ module arr
         end
     end
 
+    export get_lims
+    """
+        get_quantile_filtered
+    filters out the quantiles of the data
+    # Arguments
+    - `X::Matrix`: the data to filter
+    - `q::Real`: the quantile to filter
+    """ 
+    function get_quantile_filtered(X::Matrix, q::Real)
+        if size(X,1) > size(X,2)
+            trans = true
+            x = X'
+        else
+            trans = false
+        end
+        lims = get_lims(x, q)
+        inds = fill(true, size(x,2))
+        for lim in lims
+            inds = inds .& (x[:,lim[1]] .< lim[2])
+        end
+        @assert any(inds)
+        trans ? x[:, findall(inds)] : x[:, findall(inds)]'
+    end
+
     """
     convert dimarray into dataframe
     """
@@ -62,6 +86,52 @@ module arr
         dims = Tuple([DimensionalData.Dim{dimname}(dim) 
                       for (dim, dimname) in zip(dimvals, dimnames)])
         DimArray(vals, dims)
+    end
+
+    """
+        detect_undef_elements
+    detects the elements that are undef in an array
+    # Arguments
+    - `X::AbstractArray`: the array to detect
+    # Returns
+    - `inds::BitArray`: the indices of the elements that are undef
+    # Examples
+    ```julia
+    julia> v=Vector{DataFrame}(undef, 3)
+    3-element Vector{DataFrame}:
+     #undef
+     #undef
+     #undef
+    julia> detect_undef_elements(v)
+    3-element BitArray{1}:
+     1
+     1
+     1
+    ```
+    """
+    function detect_undef_elements(X::AbstractArray)
+        inds = fill(true, size(X))
+        for i in eachindex(X)
+           # Detect elements that are undef via UndefInitializer
+           inds[i] = !isassigned(X, i)
+        end
+        inds
+    end
+
+    """
+        undef_to_missing(X::AbstractArray)
+    converts undef elements to missing
+    # Arguments
+    - `X::AbstractArray`: the array to convert
+    # Returns
+    - `X::AbstractArray`: the converted array
+    """
+    function undef_to_missing(X::AbstractArray)
+        inds = detect_undef_elements(X)
+        X = Missing <: eltype(X) ? X : 
+            convert(Array{Union{Missing,eltype(X)}}, X)
+        X[inds] .= missing
+        X
     end
 
 
