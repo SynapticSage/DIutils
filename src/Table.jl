@@ -10,7 +10,8 @@ Module Contents:
 """
 module Table
 
-    using DrWatson, DataFrames, ProgressMeter, Statistics, Blink, TableView,
+    using Base: collect_similar
+using DrWatson, DataFrames, ProgressMeter, Statistics, Blink, TableView,
           DataStructures, Infiltrator
     using DataFrames: ColumnIndex
     import ..DIutils 
@@ -304,6 +305,37 @@ module Table
             spike_cellgroups[c][!,modifier*prop*"_argcenter"] .= qifunc.(spike_cellgroups[c].unit);
         end
         return spike_cellgroups
+    end
+
+    """
+        DIutils.arr.get_quantile_filtered(X::DataFrame, col::ColumnIndex, q::Real)
+    quantile filter a dataframe
+    # Arguments
+    - `X::DataFrame`: the dataframe
+    - `col::olumnIndex`: the column to filter
+    - `q::Real`: the quantile to filter; e.g. quantiles = [q, 1-q]
+    """
+    function DIutils.arr.get_quantile_filtered(X::DataFrame, col::ColumnIndex, 
+        q::Real)
+        q = quantile(X[:,col], [q, 1-q])
+        X[(X[:,col].>q[1]) .& (X[:,col].<q[2]),:]
+    end
+    """
+        DIutils.arr.get_quantile_filtered(X::DataFrame, col::ColumnIndex,
+            q::Vector{<:Real})
+    quantile filter a dataframe
+    # Arguments
+    - `X::DataFrame`: the dataframe
+    - `cols::Vector{ColumnIndex}`: the columns to filter
+    - `q::Vector{<:Real}`: the quantiles to filter; e.g. quantiles = [q, 1-q]
+    # Returns
+    - `X::DataFrame`: the filtered dataframe
+    """
+    function DIutils.arr.get_quantile_filtered(X::DataFrame, 
+    cols::Vector{ColumnIndex}, q::Vector{<:Real})
+        for col in cols
+            X = DIutils.arr.get_quantile_filtered(X, col, q)
+        end
     end
 
     include("Table/clean.jl")
