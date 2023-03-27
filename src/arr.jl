@@ -30,7 +30,7 @@ module arr
         end
     end
 
-    export get_lims
+    export get_quantile_filtered
     """
         get_quantile_filtered
     filters out the quantiles of the data
