@@ -5,6 +5,8 @@ module plotutils
     using Dates
     using ColorSchemes
     using Infiltrator
+    import DIutils.statistic: stat_quant
+    using Statistics
 
     export  plotcolor
 
@@ -43,6 +45,22 @@ module plotutils
         results
     end
 
+    export lower_stat_quant, upper_stat_quant
+    """
+        lower_stat_quant(stat::Function, x, q, N=1000)
+    obtains the relative lower bound of the quantile of a statistic
+    """
+    function lower_stat_quant(stat::Function, x, q, N=1000)
+        stat(skipmissing(x)) - stat_quant(stat, x, q, N) 
+    end
+    """
+        upper_stat_quant(stat::Function, x, q, N=1000)
+    obtains the relative upper bound of the quantile of a statistic
+    """
+    function upper_stat_quant(stat::Function, x, q, N=1000)
+        stat_quant(stat, x, q, N) - stat(skipmissing(x)) 
+    end
+
     """
         get_ylims
 
@@ -69,9 +87,10 @@ module plotutils
         get_lims
     grabs the quantiles for each row in the matrix
     """
-    function get_lims(X::Matrix, q=0.01)
+    function get_lims(X::Union{Vector,Matrix}, q=0.01)
+        X = X isa Vector ? Matrix(X[:, Utils.na]) : X
         lims = []
-        for i in axis(X, 1)
+        for i in axes(X, 1)
             push!(lims, quantile(X[i,:], [q, 1-q]))
         end
         [(q...,) for q in lims]

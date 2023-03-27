@@ -32,6 +32,26 @@ module statistic
     boot(data, N, func) = confint(bootstrap(func, data, BasicSampling(N)),
                                 BasicConfInt(0.95));
 
+    export stat_quant
+    """
+    TITLE: stat_quant
+    Purpose: Shortcut for quantile bootstrap of a statistic
+
+    # Arguments
+    - `stat::Function`: the statistic to bootstrap
+    - `x`: the data to bootstrap
+    - `q`: the quantile to bootstrap
+    - `N`: the number of bootstrap samples
+    # Returns
+    - the quantile of the statistic
+    """
+    function stat_quant(stat::Function, x::AbstractArray, 
+         q::Union{<:Real,<:AbstractVector{<:Real}}, N=1000)
+        b=bootstrap(stat, collect(skipmissing(x)), Bootstrap.BasicSampling(N))
+        # quantile(skipmissing(x), 0.975) - nanmean(skipmissing(x))
+        quantile(b.t1[1], q)
+    end
+
     """
     TITLE: bootGroups
     Purpose: shorcut for groupby bootstrapping means
