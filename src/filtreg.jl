@@ -51,6 +51,13 @@ module filtreg
     ### Input
     `source` -- the source dataframe to register
     `target` -- the recipient dataframe
+    `on` -- the column to register on
+    `transfer` -- the columns to transfer from source to target
+    `convert_type` -- the type to convert the columns to
+    `tolerance` -- the tolerance for the registration
+    `tolerance_violation` -- the value to use if the tolerance is violated
+    `match` -- the type of match to use
+    `checksort` -- whether to check if the data is sorted
 
     ### Output
 
@@ -62,8 +69,13 @@ module filtreg
             tolerance::Union{Float64, Nothing}=0.9999,
             tolerance_violation=missing,
             convert_type::Type=Float64,
-            match=:nearest
+            match=:nearest, checksort::Bool=true
         )::Tuple{DataFrame, DataFrame} 
+
+        if checksort
+            issorted(source[:, on]) || error("source not sorted")
+            issorted(target[:, on]) || error("target not sorted")
+        end
 
         match = if match == :nearest
             findnearest
