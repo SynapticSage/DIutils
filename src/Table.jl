@@ -317,8 +317,10 @@ using DrWatson, DataFrames, ProgressMeter, Statistics, Blink, TableView,
     """
     function DIutils.arr.get_quantile_filtered(X::DataFrame, col::ColumnIndex, 
         q::Real)
-        q = quantile(X[:,col], [q, 1-q])
-        X[(X[:,col].>q[1]) .& (X[:,col].<q[2]),:]
+        q = quantile(filter(X[:,col]) do x
+            !ismissing(x) && !isnan(x) && !isinf(x)
+        end, [q, 1-q])
+        X[(X[!,col].>q[1]) .& (X[!,col].<q[2]),:]
     end
     """
         DIutils.arr.get_quantile_filtered(X::DataFrame, col::ColumnIndex,
@@ -336,6 +338,7 @@ using DrWatson, DataFrames, ProgressMeter, Statistics, Blink, TableView,
         for col in cols
             X = DIutils.arr.get_quantile_filtered(X, col, q)
         end
+        X
     end
 
     include("Table/clean.jl")
