@@ -222,8 +222,11 @@ module DIutils
         any(X .== Y', dims=2)
     end
 
-    function notisnan(X::Vector)
+    function notisnan(X::AbstractVector)
         (!).(isnan.(X))
+    end
+    function notisnan(X::AbstractVector{<:AbstractString})
+        fill(true, size(X))
     end
 
     function getind(val, pos, nd)
