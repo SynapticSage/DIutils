@@ -1,8 +1,15 @@
+"""
+    arr.jl
+
+Module containing shorcuts for working with arrays and DimArrays (dimensioned
+arrays)
+"""
 module arr
 
     import ..DIutils: na
     import ..DIutils
-    using Infiltrator, DataFrames, DimensionalData, LazyGrids
+    using Infiltrator, DataFrames, DimensionalData, LazyGrids, Statistics,
+          NaNStatistics
 
     export permutevec
     function permutevec(V::AbstractVector, d::Int)
@@ -52,6 +59,25 @@ module arr
         end
         @assert any(inds)
         trans ? x[:, findall(inds)] : x[:, findall(inds)]'
+    end
+
+    function get_quantile_filtered(X::AbstractVector, q::Real; 
+        set_missing=false, set_zero=false, set_lim=false)
+        q_lower = quantile(X, q)
+        q_upper = quantile(X, 1-q)
+        if set_missing
+            X[(X .< q_lower) .& (X .> q_upper)] .= missing
+            return X
+        elseif set_zero
+            X[(X .< q_lower) .& (X .> q_upper)] .= 0
+            return X
+        elseif set_lim
+            X[(X .< q_lower)] .= q_lower
+            X[(X .> q_upper)] .= q_upper
+            return X
+        else
+            return X[(X .< q_lower) .& (X .> q_upper)]
+        end
     end
 
     """
