@@ -24,7 +24,12 @@ module binning
 
     function digitize(X::AbstractArray, nbins) 
         nbins = nbins + 1
+        nans = findfirst(isnan, X) === nothing ? false : true
+        if nans
+        X = Int16.(floor.(Utils.nannorm_extrema(X, [0, nbins-1])) .+ 1)
+        else
         X = Int16.(floor.(Utils.norm_extrema(X, [0, nbins-1])) .+ 1)
+        end
         X[argmax(X)] = nbins-1
         X
     end
