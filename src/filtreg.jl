@@ -166,6 +166,31 @@ module filtreg
     end
 
 
+    """
+        register(source::GroupedDataFrame, target::GroupedDataFrame, 
+                      pos...; kwargs...)
+
+    register columns in a `source` set of grouped dataframes to a `target` set
+    of grouped dataframes
+    # Arguments
+    - `source` -- the source grouped dataframe to register
+    - `target` -- the target grouped dataframe to register
+    - `pos` -- arguments to pass to `register`
+    - `kwargs` -- keyword arguments to pass to `register`
+    """
+    function register(source::GroupedDataFrame, target::GroupedDataFrame, 
+                      pos...; kwargs...)
+        source_keys = keys(source) |> collect .|> NamedTuple
+        target_keys = keys(target) |> collect .|> NamedTuple
+        K = intersect(source_keys, target_keys)
+        for k ∈ K
+            s = source[k]
+            t = target[k]
+            DIutils.filtreg.register(s, t, pos...; kwargs...)
+        end
+    end
+
+
     function registerEventsToContinuous(events::DataFrame, target::DataFrame;
             transfer::Union{Vector{String},String}, on::String="time",
             targetEltype::Dict{String,<:Type}=Dict{String,Any}(),
