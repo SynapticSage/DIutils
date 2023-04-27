@@ -185,6 +185,9 @@ module binning
         kws...)::GridAdaptive
 
         #ensureTimescale!(behavior)
+        if isempty(behavior.time)
+            error("Behavior has no data")
+        end
         dt = dt === nothing ?
              median(diff(behavior.time)) : dt
         widths = OrderedDict(prop => widths[prop] for prop in props)
