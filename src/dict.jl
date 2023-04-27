@@ -4,7 +4,7 @@ module dict
     export lambda_keys
     export to_dict
     using Infiltrator
-
+    import ..DIutils
 
     function flatten!(X::AbstractDict;keyfilt=x->true,valfilt=x->true)
         while any(typeof.(values(X)) .<: AbstractDict)
@@ -148,6 +148,10 @@ module dict
         k = first(keys(d))
         v = first(values(d))
         Dict{typeof(k),typeof(v)}(d)
+    end
+
+    function tostring(d::AbstractDict)
+        DIutils.namedtup.tostring(NamedTuple(pairs(d)))
     end
 
 end
