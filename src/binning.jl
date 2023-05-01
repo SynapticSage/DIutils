@@ -205,13 +205,10 @@ module binning
         method = adaptive ? eval(method) : fixed_radius
         radiusinc = radiusinc .+ 1
         if info || !(isdefined(Main, :PlutoRunner))
-            @info "grid" thresh dt maxrad radiusinc 
-            @info boundary 
-            @info widths
-            prog = P = Progress(length(G); desc="Grid")
+            println("grid", (;thresh, dt, maxrad, radiusinc, boundary, widths))
+            prog = Progress(length(G); desc="Grid")
         end
         @debug "Beginning threaded get_grid_bounded loop"
-        #Threads.@threads for (index, (this_center, radius)) in collect(enumerate(G))
         Threads.@threads for (index, (this_center, radius)) in collect(enumerate(G))
             #i+=1
             @debug "pre $(i)" radius G.radii
@@ -221,7 +218,7 @@ module binning
             @debug "post $(i)" newradius G.radii
             R[index] = newradius
             if !(isdefined(Main, :PlutoRunner))
-                next!(P)
+                next!(prog)
             end
         end
         G.radii .= reshape(R, size(G))

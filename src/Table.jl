@@ -37,7 +37,7 @@ using DrWatson, DataFrames, ProgressMeter, Statistics, Blink, TableView,
     # `    `---'`   '`---'`---'``---'`   '`---^`---'``---'`---|
     #                                                     `---'
     #
-    function get_periods(df::DataFrame, property::CItype, pos...;
+    function get_periods(df::AbstractDataFrame, property::CItype, pos...;
             removeMissing=false, end_period=:stop,
             timefract::Union{Function,Nothing,Pair}=nothing,
             kws...)
