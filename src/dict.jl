@@ -5,6 +5,7 @@ module dict
     export to_dict
     using Infiltrator
     import ..DIutils
+    using DataFrames
 
     function flatten!(X::AbstractDict;keyfilt=x->true,valfilt=x->true)
         while any(typeof.(values(X)) .<: AbstractDict)
@@ -152,6 +153,57 @@ module dict
 
     function tostring(d::AbstractDict)
         DIutils.namedtup.tostring(NamedTuple(pairs(d)))
+    end
+
+    # ---- Dicts with namedtuple keys ----
+    """
+        getkeyprop(d::AbstractDict, prop::Symbol)
+
+    get a property of a key in a dict
+    """
+    function getntprop(d::AbstractDict, prop::Symbol)
+        map(keys(d)|>collect) do k
+            getindex(k, prop)
+        end 
+    end
+
+
+    """
+        getpropuniq(d::AbstractDict, prop::Symbol)
+
+    get a property of a key in a dict
+    
+    # Arguments
+    -----------
+    d::AbstractDict
+        dict to get property from
+    prop::Symbol
+    # Returns
+    --------
+    Array
+        unique values of the property
+    """
+    function getntpropuniq(d::AbstractDict, prop::Symbol)
+        map(keys(d)|>collect) do k
+            getindex(k, prop)
+        end |> unique
+    end
+
+    function ntkeyframe(d::AbstractDict)::DataFrame
+        keymat = hcat([(key|>collect) for key in keys(d)]...)
+        keymat = permutedims(keymat, (2,1))
+        keyframe = DataFrame(keymat,
+            keys(d)|>first|>propertynames.|>string|>collect)
+    end
+
+    """
+    getbinaryindex(d::AbstractDict, inds::AbstractVector{Bool})
+
+    get a dict with keys filtered by a binary index
+    """
+    function getbinaryindex(d::AbstractDict, 
+                            inds::AbstractVector{Bool})::AbstractDict
+        typeof(d)(collect(keys(d))[inds], collect(values(d))[inds])
     end
 
 end
