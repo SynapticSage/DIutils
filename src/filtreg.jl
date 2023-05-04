@@ -100,7 +100,10 @@ module filtreg
         match_on_source = source[:, on]
         match_on_target = target[:, on]
 
-        if any(ismissing.(match_on_target))
+        target_missings = ismissing.(match_on_target)
+        if all(target_missings)
+            @error "All target values are missing"
+        elseif any(target_missings)
             ct = Union{convert_type, Missing}
         else
             ct = convert_type
@@ -118,7 +121,7 @@ module filtreg
         # Tolerance
         if tolerance !== nothing
             δ = @inbounds source[indices_of_source_samples_in_target, on] -
-                target[:, on]
+                target[!, on]
             out_of_tolerance = abs.(δ) .> tolerance
         else
             out_of_tolerance = zeros(Bool, size(target,1))

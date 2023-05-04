@@ -102,13 +102,27 @@ module DIutils
     function in_range(X::T where T<:Real, range::S where S<:Union{Tuple, Vector, SubArray{1}})
         X ≥ range[1] .&& X < range[2]
     end
-    function not_in_range(X::Union{Real,AbstractArray}, range::Union{Tuple, Vector})
-        (!).(in_range(X, range))
+    function in_range(X::AbstractArray, range::DataFrame; start=:start,
+                      stop=:stop)
+        # ans = fill(false, size(X))
+        ans = Vector{Vector{Bool}}(undef, size(range,1))
+        Threads.@threads for row in axes(range,1)
+            ans[row] = X .>= range[row,start] .&& X .< range[row,stop]
+        end
+        ans = reduce(.|, ans)
     end
     function in_rangeq(X::AbstractArray, qlim::Union{Tuple,Vector})
         range = [nanquantile(X,q) for q in qlim]
         in_range(X, range)
     end
+    function not_in_range(X::Union{Real,AbstractArray}, range::Union{Tuple, Vector})
+        .!(in_range(X, range))
+    end
+    function not_in_range(X::AbstractArray, range::DataFrame; start=:start,
+                          stop=:stop)
+        .!(in_range(X, range; start=start, stop=stop))
+    end
+
 
     function vals_in_rangeq(X::AbstractArray, qlim::Union{Tuple,Vector})
         X[in_rangeq(X, qlim)]
