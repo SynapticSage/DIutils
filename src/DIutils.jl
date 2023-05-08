@@ -6,6 +6,7 @@ module DIutils
     using CSV, DataFrames, Colors, ColorSchemes
     using Statistics, NaNStatistics, Plots, ThreadsX
     import DIutils
+    using LoopVectorization
 
     import SearchSortedNearest
     searchsortednearest  = SearchSortedNearest.searchsortednearest
@@ -17,6 +18,16 @@ module DIutils
     export searchsortednext, searchsortednearest
     # export remove_key_item
     # export thropt
+
+    function clearmodule!(mod::Module)
+        for sym in propertynames(mod)
+            try
+                @eval Main $(Symbol(mod)) = nothing
+            catch
+            end
+        end
+    end
+
 
     skipnan(x) = Iterators.filter(!isnan, x)
     na = [CartesianIndex()]
@@ -102,14 +113,14 @@ module DIutils
     function in_range(X::T where T<:Real, range::S where S<:Union{Tuple, Vector, SubArray{1}})
         X ≥ range[1] .&& X < range[2]
     end
-    function in_range(X::AbstractArray, range::DataFrame; start=:start,
-                      stop=:stop)
+    function in_range(X::AbstractArray, range::AbstractDataFrame; start=:start,
+                stop=:stop)::Vector{Bool}
         # ans = fill(false, size(X))
         ans = Vector{Vector{Bool}}(undef, size(range,1))
         Threads.@threads for row in axes(range,1)
             ans[row] = X .>= range[row,start] .&& X .< range[row,stop]
         end
-        ans = reduce(.|, ans)
+        reduce(.|, ans)
     end
     function in_rangeq(X::AbstractArray, qlim::Union{Tuple,Vector})
         range = [nanquantile(X,q) for q in qlim]
@@ -121,6 +132,22 @@ module DIutils
     function not_in_range(X::AbstractArray, range::DataFrame; start=:start,
                           stop=:stop)
         .!(in_range(X, range; start=start, stop=stop))
+    end
+
+    """
+        findfirstzero(
+    """
+    function findfirstzero(x::AbstractVector{<:Real})
+        x = findfirst(x)
+        x === nothing ? 0 : x
+    end
+    function in_range_index(X::AbstractVector, range::AbstractDataFrame; 
+                start=:start, stop=:stop)
+        r = Matrix{Bool}(undef, size(X,1), size(range,1))
+        Threads.@threads for row in axes(range,1)
+            r[:, row] = X .>= range[row,start] .&& X .< range[row,stop]
+        end
+        @avxt findfirstzero.(eachrow(r)|>collect)
     end
 
 
