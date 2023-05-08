@@ -22,13 +22,27 @@ module binning
         grid = dropdims(mean([vec(grid[1:end-1]) vec(grid[2:end])], dims=2), dims=2)
     end
 
-    function digitize(X::AbstractArray, nbins) 
+    """
+        digitize(X::AbstractArray, nbins)
+
+    Digitize an array into `nbins` bins. The bins are defined by the extrema
+    of the array, and the bins are inclusive of the extrema. 
+
+    # Arguments
+    - `X::AbstractArray`: the array to digitize
+    - `nbins::Int`: the number of bins to digitize into
+    """
+    function digitize(X::AbstractArray, nbins::Int; rank::Bool=false) 
         nbins = nbins + 1
         nans = findfirst(isnan, X) === nothing ? false : true
+        if rank
+            xr = sortperm(X[:])
+            X = reshape(xr, size(X))
+        end
         if nans
-        X = Int16.(floor.(Utils.nannorm_extrema(X, [0, nbins-1])) .+ 1)
+            X = Int16.(floor.(Utils.nannorm_extrema(X, [0, nbins-1])) .+ 1)
         else
-        X = Int16.(floor.(Utils.norm_extrema(X, [0, nbins-1])) .+ 1)
+            X = Int16.(floor.(Utils.norm_extrema(X, [0, nbins-1])) .+ 1)
         end
         X[argmax(X)] = nbins-1
         X
