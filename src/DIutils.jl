@@ -141,15 +141,23 @@ module DIutils
         x = findfirst(x)
         x === nothing ? 0 : x
     end
+    """
+        in_range_index(X::AbstractVector, range::Union{Tuple, Vector})
+    
+    """
     function in_range_index(X::AbstractVector, range::AbstractDataFrame; 
                 start=:start, stop=:stop)
         r = Matrix{Bool}(undef, size(X,1), size(range,1))
         Threads.@threads for row in axes(range,1)
             r[:, row] = X .>= range[row,start] .&& X .< range[row,stop]
         end
-        @avxt findfirstzero.(eachrow(r)|>collect)
+        answer = Vector{Int32}(undef, size(X,1))
+        iters = enumerate(eachrow(r)) |> collect
+        Threads.@threads for (i, row) in iters
+            answer[i] = findfirstzero(row)
+        end
+        answer
     end
-
 
     function vals_in_rangeq(X::AbstractArray, qlim::Union{Tuple,Vector})
         X[in_rangeq(X, qlim)]
