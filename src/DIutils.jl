@@ -6,7 +6,6 @@ module DIutils
     using CSV, DataFrames, Colors, ColorSchemes
     using Statistics, NaNStatistics, Plots, ThreadsX
     import DIutils
-    using LoopVectorization
 
     import SearchSortedNearest
     searchsortednearest  = SearchSortedNearest.searchsortednearest
