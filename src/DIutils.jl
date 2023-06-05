@@ -121,6 +121,8 @@ module DIutils
         end
         reduce(.|, ans)
     end
+
+
     function in_rangeq(X::AbstractArray, qlim::Union{Tuple,Vector})
         range = [nanquantile(X,q) for q in qlim]
         in_range(X, range)

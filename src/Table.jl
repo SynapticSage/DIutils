@@ -11,7 +11,7 @@ Module Contents:
 module Table
 
     using Base: collect_similar
-using DrWatson, DataFrames, ProgressMeter, Statistics, Blink, TableView,
+    using DrWatson, DataFrames, ProgressMeter, Statistics, Blink, TableView,
           DataStructures, Infiltrator
     using DataFrames: ColumnIndex
     import ..DIutils 
@@ -138,12 +138,28 @@ using DrWatson, DataFrames, ProgressMeter, Statistics, Blink, TableView,
         periods = periods[constrain,:];
     end
 
-    function constrain_range(X::DataFrame, prop::String, τ_start, τ_stop)
-        timeset = (X[!,prop] .≥ τ_start) .& (X[!,prop] .< τ_stop);
+    function constrain_range(X::AbstractDataFrame, timeprop::CItype, τ_start::Real, τ_stop::Real)
+        timeset =  @. (X[!,timeprop] ≥ τ_start) & (X[!,timeprop] < τ_stop);
         X = X[timeset, :];
         return X
     end
     constrain_into_period = constrain_range
+
+    function DIutils.in_range(X::AbstractDataFrame,
+        range::AbstractDataFrame; start=:start, stop=:stop,
+        timeprop=:time, index::Bool=true)
+        results = Vector{Union{Missing,DataFrame}}(missing, nrow(range))
+        prog = Progress(nrow(range), 1, "Constraining")
+        Threads.@threads for i in axes(range,1)
+            results[i] = DIutils.Table.constrain_range(X, timeprop,
+            range[i,start], range[i,stop])
+            if index
+                results[i].index = fill(i, nrow(results[i]))
+            end
+            next!(prog)
+        end
+        vcat(results...)
+    end
 
 
     """
@@ -345,6 +361,7 @@ using DrWatson, DataFrames, ProgressMeter, Statistics, Blink, TableView,
     include("Table/convert_types.jl")
     include("Table/group.jl")
     include("Table/columntype.jl")
+    include("Table/smooth.jl")
     # @reexport using .clean, .convert_types, .group, .columntype
     export clean, convert_types, group, columntype
     export CItype, CItype_plusNull
